@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
+-- Dumped from database version 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -583,7 +583,8 @@ CREATE TABLE public.media_manager_speaker (
     name character varying(149) NOT NULL,
     slug character varying(149) NOT NULL,
     biography text,
-    picture character varying(100)
+    picture character varying(100),
+    short_bio character varying(249) NOT NULL
 );
 
 
@@ -657,12 +658,13 @@ CREATE TABLE public.media_manager_video (
     description text,
     featured boolean NOT NULL,
     available boolean NOT NULL,
-    thumbnail character varying(100),
+    poster character varying(100),
     offline_video_uri character varying(500) NOT NULL,
     category_id bigint NOT NULL,
     speaker_id bigint NOT NULL,
     topic_id bigint,
-    year_id bigint NOT NULL
+    year_id bigint NOT NULL,
+    thumbnail_1 character varying(100)
 );
 
 
@@ -827,6 +829,100 @@ ALTER TABLE public.media_manager_year_id_seq OWNER TO oka;
 --
 
 ALTER SEQUENCE public.media_manager_year_id_seq OWNED BY public.media_manager_year.id;
+
+
+--
+-- Name: product_manager_price; Type: TABLE; Schema: public; Owner: oka
+--
+
+CREATE TABLE public.product_manager_price (
+    id bigint NOT NULL,
+    active boolean NOT NULL,
+    currency character varying(3) NOT NULL,
+    nickname character varying(255) NOT NULL,
+    recurring_interval character varying(5) NOT NULL,
+    recurring_usage_type character varying(10) NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    product_id bigint,
+    billing_period integer,
+    duration integer,
+    stripe_created integer,
+    stripe_type character varying(15),
+    unit_amount integer,
+    unit_amount_decimal numeric(18,12) NOT NULL,
+    stripe_id character varying(30)
+);
+
+
+ALTER TABLE public.product_manager_price OWNER TO oka;
+
+--
+-- Name: product_manager_price_id_seq; Type: SEQUENCE; Schema: public; Owner: oka
+--
+
+CREATE SEQUENCE public.product_manager_price_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.product_manager_price_id_seq OWNER TO oka;
+
+--
+-- Name: product_manager_price_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: oka
+--
+
+ALTER SEQUENCE public.product_manager_price_id_seq OWNED BY public.product_manager_price.id;
+
+
+--
+-- Name: product_manager_product; Type: TABLE; Schema: public; Owner: oka
+--
+
+CREATE TABLE public.product_manager_product (
+    id bigint NOT NULL,
+    release_date date NOT NULL,
+    region character varying(255) NOT NULL,
+    stripe_id character varying(30) NOT NULL,
+    active boolean NOT NULL,
+    description character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    stripe_created integer NOT NULL,
+    statement_descriptor character varying(255),
+    unit_label character varying(50),
+    stripe_updated integer NOT NULL,
+    url character varying(255),
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    collection_id bigint NOT NULL,
+    source character varying(10) NOT NULL
+);
+
+
+ALTER TABLE public.product_manager_product OWNER TO oka;
+
+--
+-- Name: product_manager_product_id_seq; Type: SEQUENCE; Schema: public; Owner: oka
+--
+
+CREATE SEQUENCE public.product_manager_product_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.product_manager_product_id_seq OWNER TO oka;
+
+--
+-- Name: product_manager_product_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: oka
+--
+
+ALTER SEQUENCE public.product_manager_product_id_seq OWNED BY public.product_manager_product.id;
 
 
 --
@@ -1159,6 +1255,20 @@ ALTER TABLE ONLY public.media_manager_year ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
+-- Name: product_manager_price id; Type: DEFAULT; Schema: public; Owner: oka
+--
+
+ALTER TABLE ONLY public.product_manager_price ALTER COLUMN id SET DEFAULT nextval('public.product_manager_price_id_seq'::regclass);
+
+
+--
+-- Name: product_manager_product id; Type: DEFAULT; Schema: public; Owner: oka
+--
+
+ALTER TABLE ONLY public.product_manager_product ALTER COLUMN id SET DEFAULT nextval('public.product_manager_product_id_seq'::regclass);
+
+
+--
 -- Name: user_manager_country id; Type: DEFAULT; Schema: public; Owner: oka
 --
 
@@ -1287,6 +1397,14 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 78	Can change license_ profile	20	change_license_profile
 79	Can delete license_ profile	20	delete_license_profile
 80	Can view license_ profile	20	view_license_profile
+81	Can add price	21	add_price
+82	Can change price	21	change_price
+83	Can delete price	21	delete_price
+84	Can view price	21	view_price
+85	Can add product	22	add_product
+86	Can change product	22	change_product
+87	Can delete product	22	delete_product
+88	Can view product	22	view_product
 \.
 
 
@@ -1298,7 +1416,14 @@ COPY public.auth_user (id, password, last_login, is_superuser, username, first_n
 4	pbkdf2_sha256$260000$wu42eakWX87X94HHXxTbb6$zBJH1CRKHjmdlqd6yDGlLmdmp1l+lkBLN+hezQtPfXI=	\N	f	tets_2				f	t	2021-04-29 23:31:19.933672+00
 2	pbkdf2_sha256$260000$pV9UnyU0BUZ6EbW2axIRZD$R/onuqnRqBBgYu6DaFZIAGIexwiUpYPFXuNl+9KIG8Q=	2021-05-04 20:26:26.153201+00	t	a				t	t	2021-04-22 00:48:01+00
 5	pbkdf2_sha256$260000$I5SgaQQQGPSIlPrrRq8hAA$522l7AfmJc0AwEbZ7d6Qotfvfjo46Ai9QNKstBl302Y=	2021-05-04 20:49:15.578558+00	t	aidee@onel.media	Aidee	Arrieta	aidee@onel.media	t	t	2021-05-04 20:48:34+00
-1	pbkdf2_sha256$260000$UDKPEsH2rJPmip12WT9RKJ$gfNDpxyuTuitqZIPKaXNb9+QNfPd/bMPVb/414cYIRE=	2021-05-17 22:47:56.994409+00	t	okadath	aa		gustavo@onel.media	t	t	2021-04-22 00:42:23+00
+6	pbkdf2_sha256$260000$EmViXKjsONIxMd42060dfM$F4dyKWVgi4HvQ2AMhtedHFP8jTVF3Jq/K7g/gDphO8g=	\N	f	string			user@example.com	f	t	2021-05-28 20:30:13.715164+00
+7	pbkdf2_sha256$260000$nQziZeHyIqxkScP5u7CqYf$lua0/FSg5GMCUkVUTwlv0Qzs/xh89eU0oezFaYE0W68=	\N	f	string2			user2@example.com	f	t	2021-05-28 21:05:17.768034+00
+8	pbkdf2_sha256$260000$43ZfZQ9j80MKz9jRZVJjYt$2NJZyAyvtxzpJminTmdoV1GPtAIPu8eDN0PSb3gdx50=	\N	f	AdrianaSoltz				f	t	2021-06-07 19:11:43.941303+00
+9	pbkdf2_sha256$260000$zuDF2X9JomxxBGlKfVv6CG$e/rk+XNAagAy9/fNadOq/sXm3M0Gc1lS2vS/IzxPdik=	\N	f	EmmaRose				f	t	2021-06-07 19:14:05.790704+00
+10	pbkdf2_sha256$260000$lZeIYlXKgin1EPTb1hUseu$0ATtBI3RC+hcp0ZVZmPvjr45Bqzv1wmXquMFRmnHiE0=	\N	f	FrancisEvans				f	t	2021-06-07 19:16:06.838328+00
+11	pbkdf2_sha256$260000$5s8hgKRnPeADOrzk2bQ9fL$Y0gNd/g7fkG2KKzy3s0eVca9DDXGzFY8FEWU7fhG74w=	\N	f	KrisAnderson				f	t	2021-06-07 19:17:35.738244+00
+12	pbkdf2_sha256$260000$WpLWO2TXEA3QaQxrFPfwAk$dUk8YNT6kt8o2j+Wha0zzRllupPMQl28lRbDtZDGMKk=	\N	f	JohnPollard				f	t	2021-06-07 19:18:01.882083+00
+1	pbkdf2_sha256$260000$UDKPEsH2rJPmip12WT9RKJ$gfNDpxyuTuitqZIPKaXNb9+QNfPd/bMPVb/414cYIRE=	2021-06-15 23:31:54.056076+00	t	okadath	aa		gustavo@onel.media	t	t	2021-04-22 00:42:23+00
 \.
 
 
@@ -8363,6 +8488,84 @@ COPY public.django_admin_log (id, action_time, object_id, object_repr, action_fl
 7038	2021-05-13 00:33:40.522478+00	1954	Zimbabwe - Matabeleland North Province	1	new through import_export	10	1
 7039	2021-05-13 00:33:40.592959+00	1952	Zimbabwe - Matabeleland South Province	1	new through import_export	10	1
 7040	2021-05-13 00:33:40.663435+00	1957	Zimbabwe - Midlands Province	1	new through import_export	10	1
+7041	2021-06-04 21:13:31.339003+00	37	2020 - Nona Jones - Safe is Insufficient	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7042	2021-06-04 21:13:38.841209+00	37	2020 - Nona Jones - Safe is Insufficient	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7043	2021-06-04 21:14:44.321402+00	36	2020 - Sadie Robertson Huff - Sadie Robertson Huff	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7044	2021-06-04 21:16:02.747707+00	35	2020 - April Tam Smith - April Tam Smith	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7045	2021-06-04 21:16:49.035274+00	35	2020 - April Tam Smith - April Tam Smith	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7046	2021-06-04 21:21:52.166244+00	34	2020 - Edgar Sandoval - Edgar's Story	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7047	2021-06-04 21:22:50.940776+00	33	2020 - Katurah York Cooper - Katurah York Cooper	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7048	2021-06-04 21:23:20.044175+00	32	2020 - Tomas Chamorro - Six traits leaders typically lack during crisis	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7049	2021-06-04 21:23:48.952843+00	31	2020 - Paula Faris - How to lead through life's reset	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7050	2021-06-04 21:24:31.503756+00	30	2020 - TD Jakes - The metrics of migrative leadership	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7051	2021-06-04 21:25:21.408416+00	29	2020 - Albert Tate - Leadership that meets the moment	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7052	2021-06-04 21:27:08.618724+00	28	2020 - Kaká - The leadership of a legendary athlete: One on one with Kaká	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7053	2021-06-04 21:29:15.013419+00	27	2020 - Lysa Terkeurst - Most surprising hinderance to innovation	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7054	2021-06-04 21:47:32.444415+00	26	2020 - Amy Edmonson - Fearless organizations demand psychological safety	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7055	2021-06-04 22:03:00.199365+00	24	2020 - Vanessa Van Edwards - The science of leadership: Impacting for good	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7056	2021-06-04 22:06:33.226227+00	22	2020 - Marcus Buckingham - How the best leaders build resilience	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7057	2021-06-04 22:10:43.656482+00	21	2020 - Craig Groeschel - Leading through the dip	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7058	2021-06-04 22:16:32.424365+00	20	2019 - Raja B. Singh - The Cure for Corruption	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7059	2021-06-04 22:18:31.187902+00	18	2019 - Todd Henry - Herding Tigers	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7060	2021-06-04 22:20:42.431391+00	16	2019 - Krish Kandiah - VIP Leadership	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7061	2021-06-04 22:23:35.671367+00	13	2019 - DeVon Franklin - Your Difference is Your Destiny	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7062	2021-06-04 22:24:12.357346+00	12	2019 - Pete Ochs - Hutchinson Correctional Facility	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7063	2021-06-04 22:24:41.591524+00	11	2019 - Chris Voss - One-on-One with Paula Farris.	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7064	2021-06-04 22:25:12.037221+00	10	2019 - Danielle Strickland - Leading Transformational Change	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7065	2021-06-04 22:25:56.048921+00	9	2019 - Liz Bohannon - Beginner’s Pluck	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7066	2021-06-04 22:27:43.736234+00	7	2019 - Jackson Ole Sapi - Archbishop of Kenya	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7067	2021-06-04 22:28:19.001501+00	6	2019 - Gabi Faria - Libson Project	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7068	2021-06-04 22:28:52.06976+00	5	2019 - Jason Dorsey - Generational Clues Uncovered	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7069	2021-06-04 22:30:25.838624+00	2	2019 - Craig Groeschel - Bend the Curve	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7070	2021-06-04 22:31:36.175423+00	1	2019 - Craig Groeschel - Heart Over Head	2	[{"changed": {"fields": ["Thumbnail 1"]}}]	17	1
+7071	2021-06-04 22:37:38.173812+00	38	Todd Henry	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7072	2021-06-04 22:38:22.294836+00	37	Raja B. Singh	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7073	2021-06-04 22:38:55.173975+00	36	Pete Ochs	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7074	2021-06-04 22:39:35.538454+00	35	Patrick Lencioni	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7075	2021-06-04 22:40:32.783657+00	34	Liz Bohannon	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7076	2021-06-04 22:41:54.556445+00	33	Krish Kandiah	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7077	2021-06-04 22:42:56.324996+00	32	Jo Saxton	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7078	2021-06-04 22:45:33.470297+00	31	Jia Jiang	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7079	2021-06-04 22:53:40.696038+00	32	Jo Saxton	2	[]	15	1
+7080	2021-06-04 22:55:07.160669+00	30	Jason Dorsey	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7081	2021-06-04 22:56:42.595419+00	29	Jackson Ole Sapi	2	[{"changed": {"fields": ["Short bio", "Biography"]}}]	15	1
+7082	2021-06-04 22:57:35.070046+00	28	Gabi Faria	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7083	2021-06-04 22:58:43.213947+00	27	DeVon Franklin	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7084	2021-06-04 22:59:12.288261+00	26	Danielle Strickland	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7085	2021-06-04 22:59:41.251419+00	25	Chris Voss	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7086	2021-06-04 23:01:21.85243+00	24	Bozoma Saint John	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7087	2021-06-04 23:05:55.316027+00	22	Vanessa Van Edwards	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7088	2021-06-04 23:06:39.909657+00	21	Tomas Chamorro	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7089	2021-06-04 23:07:37.346371+00	20	TD Jakes	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7090	2021-06-04 23:22:03.909494+00	19	Sadie Robertson Huff	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7091	2021-06-04 23:23:16.636796+00	18	Rory Vaden	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7092	2021-06-04 23:23:54.873164+00	17	Paula Faris	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7093	2021-06-04 23:25:24.888966+00	16	Nona Jones	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7094	2021-06-04 23:27:04.572715+00	15	Michael Todd	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7095	2021-06-04 23:27:48.3652+00	14	Marcus Buckingham	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7096	2021-06-04 23:28:22.901648+00	13	Lysa Terkeurst	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7097	2021-06-04 23:28:59.826963+00	12	Katurah York Cooper	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7098	2021-06-04 23:30:48.971349+00	11	Kaká	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7099	2021-06-04 23:31:31.94696+00	10	Edgar Sandoval	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7100	2021-06-04 23:32:39.813025+00	9	Craig Groeschel	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7101	2021-06-04 23:33:43.430028+00	8	Bear Grylls	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7102	2021-06-04 23:34:12.612597+00	7	April Tam Smith	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7103	2021-06-04 23:34:54.525042+00	6	Angela Duckworth	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7104	2021-06-04 23:36:14.522907+00	5	Angela Ahrendts	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7105	2021-06-04 23:39:11.488141+00	4	Andy Stanley	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7106	2021-06-04 23:40:11.373094+00	3	Amy Edmonson	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7107	2021-06-04 23:41:29.408498+00	2	Albert Tate	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7108	2021-06-04 23:41:56.801818+00	1	Aja Brown	2	[{"changed": {"fields": ["Short bio"]}}]	15	1
+7109	2021-06-07 19:11:44.1213+00	8	AdrianaSoltz	1	[{"added": {}}]	4	1
+7110	2021-06-07 19:14:06.085951+00	9	EmmaRose	1	[{"added": {}}]	4	1
+7111	2021-06-07 19:16:07.026411+00	10	FrancisEvans	1	[{"added": {}}]	4	1
+7112	2021-06-07 19:17:36.052118+00	11	KrisAnderson	1	[{"added": {}}]	4	1
+7113	2021-06-07 19:18:02.130769+00	12	JohnPollard	1	[{"added": {}}]	4	1
+7114	2021-06-07 19:28:39.812222+00	8	AdrianaSoltz	2	[{"changed": {"fields": ["Country", "State", "City", "Phone number", "Work", "Birthday", "Picture"]}}]	9	1
+7115	2021-06-07 19:34:03.149252+00	9	EmmaRose	2	[{"changed": {"fields": ["Country", "State", "City", "Phone number", "Work", "Birthday", "Picture"]}}]	9	1
+7116	2021-06-07 19:37:09.047033+00	10	FrancisEvans	2	[{"changed": {"fields": ["Country", "State", "City", "Phone number", "Work", "Birthday", "Picture"]}}]	9	1
+7117	2021-06-07 19:41:22.545967+00	11	KrisAnderson	2	[{"changed": {"fields": ["Country", "State", "City", "Phone number", "Work", "Birthday", "Picture"]}}]	9	1
+7118	2021-06-07 19:43:09.240752+00	12	JohnPollard	2	[{"changed": {"fields": ["Country", "State", "City", "Phone number", "Work", "Birthday", "Picture"]}}]	9	1
 \.
 
 
@@ -8391,6 +8594,8 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 18	media_manager	year
 19	media_manager	videoforeigndata
 20	media_manager	license_profile
+21	product_manager	price
+22	product_manager	product
 \.
 
 
@@ -8439,6 +8644,26 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 40	user_manager	0013_auto_20210512_0532	2021-05-12 05:32:39.126518+00
 41	user_manager	0014_auto_20210512_0541	2021-05-12 05:41:16.978749+00
 42	user_manager	0015_auto_20210512_1844	2021-05-12 18:44:25.864283+00
+43	media_manager	0008_auto_20210604_1807	2021-06-04 18:18:41.787728+00
+44	media_manager	0009_auto_20210604_1808	2021-06-04 18:18:42.158094+00
+45	product_manager	0001_initial	2021-06-04 18:18:42.911881+00
+46	product_manager	0002_auto_20210516_2209	2021-06-04 18:18:43.638387+00
+47	product_manager	0003_auto_20210516_2226	2021-06-04 18:18:43.991202+00
+48	product_manager	0004_auto_20210516_2232	2021-06-04 18:18:44.39873+00
+49	product_manager	0005_auto_20210516_2234	2021-06-04 18:18:44.807441+00
+50	product_manager	0006_alter_product_active	2021-06-04 18:18:45.153769+00
+51	product_manager	0007_alter_price_active	2021-06-04 18:18:45.490582+00
+52	product_manager	0008_alter_product_unit_label	2021-06-04 18:18:45.831095+00
+53	product_manager	0009_product_source	2021-06-04 18:18:46.23484+00
+54	product_manager	0010_auto_20210519_0419	2021-06-04 18:18:46.72236+00
+55	product_manager	0011_rename_stripe_type_price_type	2021-06-04 18:18:47.054763+00
+56	product_manager	0012_remove_price_type	2021-06-04 18:18:47.390394+00
+57	product_manager	0013_price_type	2021-06-04 18:18:47.72612+00
+58	product_manager	0014_auto_20210519_0917	2021-06-04 18:18:48.26235+00
+59	product_manager	0015_rename_type_price_stripe_type	2021-06-04 18:18:48.596216+00
+60	product_manager	0016_price_stripe_id	2021-06-04 18:18:48.931445+00
+61	product_manager	0017_auto_20210522_0348	2021-06-04 18:18:49.339277+00
+62	product_manager	0018_alter_price_stripe_id	2021-06-04 18:18:49.674176+00
 \.
 
 
@@ -8459,6 +8684,12 @@ tjg0uig15510j91v0u1mserwfy64a9hy	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy
 nd3pzrtky6t6m3sr3gl1vvcfgxbrxr84	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1le6FP:iRzMajNuXiC2FXZv8Uil8e9xNLYny7cDoIb3bGQ2ihg	2021-05-19 01:22:43.264989+00
 et6vfitvmamr7g98hwybtrymrterjyct	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1leith:z0zRoA-HwC8KxPItguOFX0P7RIeLf-pXJvGRKVLEeuY	2021-05-20 18:38:53.342839+00
 ypjbcq9cjy17uuzuyayf34zb2ik28r1a	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1lim1l:DwO7eiX3dzCm-odU_ZIhSuB7kQp8n4jjjMcedPmxFF0	2021-05-31 22:47:57.099972+00
+w54dwc0p8w1hpwpki8jm3do83tijjvt1	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1lmj2f:RVsFC80ALsCb-3pVRMeXdW3-SuBbZSlaluy4MwnSzJQ	2021-06-11 20:25:13.998035+00
+8q8l8who5v1f41pzyk946qe45dhoj136	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1lpEPx:Apg34e1FbcEOfwaPs9-uTSkidqyerVeAIJZcHywhsVk	2021-06-18 18:19:37.318821+00
+cq6kljew4zdrbhiekrw9h3r48rnqgtsr	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1lpFT7:ct5OsePzpMcv4da4pOJyi3rXL4HKUWr3WlS8CApISKE	2021-06-18 19:26:57.95677+00
+qlvzpk02kvflnjv7nu1harnn3n6iomgc	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1lpH5h:OrLmZ5RdEki7D2fKnTsCqG7e1EACkL6Ys9YOYBz33NY	2021-06-18 21:10:53.051201+00
+o399of0cydp6vp0bwyq9gizankiejkx2	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1lr1yo:qX8mNAnKB6xvpQPhWQrI2myEWyAhWa-HYYfvrBjJPSA	2021-06-23 17:27:02.525609+00
+xg9fjnvc4th8xiwy8ih6bkungdjkakch	.eJxVjDsOwyAQRO9CHSHzE3bK9DkDWnaX4CQCydiVlbsHSy6SbjTz5u0iwLbmsDVewkziKpS4_HYR8MXlGOgJ5VEl1rIuc5QHIs-1yXslft9O9k-QoeX-nhCcioYQrTF-mFAnStq5ROyVHzQDUreB1SbaEXpKSpFJntJoybD4fAEN5Tlp:1ltIXC:khI-IDBspnH5IC2czNOpOPjoT6G_dvAbgZWefz7o-hs	2021-06-29 23:31:54.146219+00
 \.
 
 
@@ -8557,46 +8788,46 @@ COPY public.media_manager_license_profile (id, profile, license_id) FROM stdin;
 -- Data for Name: media_manager_speaker; Type: TABLE DATA; Schema: public; Owner: oka
 --
 
-COPY public.media_manager_speaker (id, name, slug, biography, picture) FROM stdin;
-1	Aja Brown	aja-brown	At the age of 31, Aja Brown made history as the youngest elected mayor of Compton, California. A national trailblazer, her revitalization strategy centers on family values, quality of life, economic development and infrastructural growth. Overwhelmingly re-elected to a second term in 2017, Mayor Brown’s community initiatives and policy changes have significantly reduced gang-related homicides and the unemployment rate. Mayor Brown is the recipient of multiple honors, including the esteemed 2016 John F. Kennedy New Frontier Award.	pictures/2019_Aja_Brown_thumbnail.jpg
-2	Albert Tate	albert-tate	Albert Tate, senior pastor of Fellowship Church,\r\nheld a variety of strategic pastoral leadership\r\npositions before founding the church in 2012—\r\none of the fastest-growing multiethnic churches\r\nin the U.S. He also serves on the board of\r\ntrustees for multiple organizations including\r\nAzusa Pacific University, Fuller Youth Institute’s\r\nAdvisory Council and the Global Leadership\r\nNetwork. A dynamic communicator, this 20-year\r\nministry veteran is known to combine biblical\r\nchallenge with humor. He is a sought-after\r\nguest speaker at universities and churches\r\nacross the U.S. He was recently published in\r\nLetters to a Birmingham Jail: A Response to the\r\nWords and Dreams of Dr. Martin Luther King Jr.	pictures/2020_Albert_Tate_Thumbnail.jpg
-3	Amy Edmonson	amy-edmonson	Amy Edmondson has been recognized by the biannual Thinkers50 global\r\nlist of top management thinkers since 2011. She is the author of four\r\nbooks, including Teaming: How Organizations Learn, Innovate and Compete\r\nin the Knowledge Economy, exploring why teamwork is so important in\r\ntoday’s organizations—and why it is so challenging. Her most recent\r\nrelease: The Fearless Organization: Creating Psychological Safety in the\r\nWorkplace for Learning, Innovation, and Growth offers practical guidance\r\nfor teams and organizations who are serious about finding success in\r\ntoday’s modern economy.	pictures/2020_Amy_Edmonson_Thumbnail.jpg
-4	Andy Stanley	andy-stanley	Andy Stanley founded North Point Ministries (NPM) more than 20 years ago. Today, NPM is comprised of six churches in the Atlanta area and a network of 30 churches around the globe, collectively serving nearly 70,000 people weekly. Recently, Outreach magazine identified Stanley as one of the Top 10 Most Influential Pastors in America. The author of more than 20 books, he is passionate about serving both church and organizational leaders.	pictures/video04_thumbnail.png
-5	Angela Ahrendts	angela-ahrendts	Angela Jean Ahrendts, is an American businesswoman who was previously the senior vice president of retail at Apple Inc. She was the CEO of Burberry from 2006 to 2014. Ahrendts left Burberry to join Apple in 2014. Ahrendts was ranked 25th in Forbes' 2015 list of the most powerful women in the world, 9th most powerful woman in the U.K. in the BBC Radio 4 Woman's Hour 100 Power List, and 29th in Fortune's 2014 list of the world's most powerful women in business. She was also a member of the UK's Prime Minister's business advisory council until it was disbanded in 2016.	pictures/faculty_2018_Angela_Ahrendts_480x480.jpg
-6	Angela Duckworth	angela-duckworth	Angela Duckworth is a professor of psychology at University of Pennsylvania and founder of Character Lab, a nonprofit whose mission is to advance the practice of character development. An advisor to the White House, the World Bank and Fortune 500 CEOs, Duckworth studies grit and self-control, two attributes critical to success and well-being. Her first book, Grit: The Power of Passion and Perseverance, debuted in 2016 as a New York Times bestseller.	pictures/video09_thumbnail.png
-7	April Tam Smith	april-tam-smith	Managing Director, Equity Derivatives Co-Founder\r\n\r\nP.S. Kitchen	pictures/2020_April_Tam_Smith_Thumbnail.jpeg
-8	Bear Grylls	bear-grylls	Bear Grylls is the embodiment of adventure. A former member of the British Special Forces, Grylls has climbed Everest, crossed the Arctic Ocean in an inflatable boat and has publicly supported the Alpha Course to help inspire people in their journey of faith. His Emmy-nominated TV show Man Vs Wild became one of the most watched programs on the planet with an estimated audience of 1.2 billion. He also hosts NBC’s hit show Running Wild with Bear Grylls as well as groundbreaking series on National Geographic, Netflix and Amazon. He is a number 1 best-selling author and has sold over 15 million books. These include his autobiography Mud, Sweat and Tears, and this year a powerful new book on faith called: Soul Fuel.	pictures/2019_Bear_Grylls_thumbnail.jpg
-9	Craig Groeschel	craig-groeschel	Craig Groeschel is the founder and senior pastor of Life.Church, an\r\ninnovative church meeting in multiple U.S. locations and globally online.\r\nKnown for its missional approach utilizing the latest technology, Life.\r\nChurch is the creator of the YouVersion Bible App—downloaded in every\r\ncountry worldwide. Groeschel was named in the top 10 U.S. CEO’s for small\r\nand midsize companies by Glassdoor. Traveling the world as a champion\r\nof The Global Leadership Summit, Craig Groeschel advocates to grow\r\nleaders in every sector of society. He is the host of the Craig Groeschel\r\nLeadership Podcast with over 1.5 million downloads a month and a New\r\nYork Times best-selling author. His latest book is Dangerous Prayers.	pictures/2020_Craig_Groeschel_thumbnail.jpg
-10	Edgar Sandoval	edgar-sandoval	Edgar spent 20 years in various leadership positions with Procter & Gamble, including marketing director of North America fabric care and vice president of North America marketing. In his last role as vice president and general manager of global feminine care, he made it his mission to advocate for girls and women around the world and help empower them to live life to their fullest potential.	pictures/2020_Edgar_Sandoval_thumbnail.jpg
-11	Kaká	kaka	A Brazilian football (soccer) legend, Ricardo Izecson dos Santos Leite,\r\nfamously known as Kaká, is one of only eight players in history to have\r\nwon the Ballon d’Or, the FIFA World Cup and the UEFA Champions\r\nLeague. As the first sportsperson to amass 10 million followers on\r\nTwitter, he is considered one of the most famous athletes in the world.\r\nStarting his professional career as an attacking midfielder at the age\r\nof 18 with the Brazilian football club, São Paulo FC, he quickly became\r\na critical member of the Brazilian national team. Before retiring in\r\n2017, Kaká, spent most of his famed career with AC Milan and playing\r\nfor Real Madrid. Additionally, he captained the inaugural campaign\r\nof the MLS’s Orlando City Football Club as its first designated player.\r\nThroughout his career, Kaká’s leadership on the field has earned many\r\nawards and achievements including the Ballon d’Or, FIFA World Player\r\nof the Year, MARCA Legend Award and AC Milan Hall of Fame. Listed to\r\nTime’s 100 Most Influential List for two consecutive years, he is also a\r\nUN Ambassador for the World Food Programme.	pictures/2020_Kaka_thumbnail.jpg
-12	Katurah York Cooper	katurah-york-cooper	Dr. Katurah York Cooper fled with her daughters from the Liberian civil war to reside in the United States as a refugee for eleven years. Since returning to Liberia in 2001, she has served as an educator, human rights advocate, leadership coach, author, and pastor. Her latest book, You Can Lead!, invites readers to reflect on their own experiences while learning from hers, and discover unique paths to becoming the leader God has called them to be.	pictures/2020_Katurah_York_thumbnail.jpeg
-13	Lysa Terkeurst	lysa-terkeurst	Reaching millions of people through her writing and teaching, Lysa\r\nTerKeurst is the President of Proverbs 31 Ministries and founder\r\nof COMPEL Writer Training. Lysa has been published in many\r\npublications, featured on Fox News, Oprah and The Today Show and has\r\nbeen awarded the Champions of Faith Author Award. She is the bestselling author of more than 20 books, including It’s Not Supposed to Be\r\nThis Way: Finding Unexpected Strength When Disappointments Leave You\r\nShattered and Uninvited: Living Loved When You Feel Less Than, Left Out,\r\nand Lonely. She is also releasing a new book in October, Forgiving What\r\nYou Can’t Forget.	pictures/2020_Lysa_Terkeurst_thumbnail.jpg
-14	Marcus Buckingham	marcus-buckingham	Marcus Buckingham is a global researcher, thought leader and leading\r\nexpert on talent, focused on unlocking people’s strengths, increasing\r\ntheir performance and pioneering the future of how people work. A\r\nformer senior researcher at Gallup Organization, he now guides the\r\nvision of ADP Research Institute as Head of People + Performance. He\r\nis the author of nine books, including First Break All the Rules, and Now\r\nDiscover Your Strengths, two of the best-selling business books of all\r\ntime. His latest release—Nine Lies About Work: A Freethinking Leader’s\r\nGuide to the Real World—takes an in-depth look at the lies that pervade\r\nour workplaces and the core truths that will help us change it for the\r\nbetter.	pictures/2020_Marcus_Buckingham_thumbnail.jpg
-15	Michael Todd	michael-todd	When a social media account tweeted a grainy\r\n10-minute cell phone video from a sermon Todd\r\npreached on his experience at Transformation\r\nChurch back in 2017, the post received over\r\n2 million views in 48 hours. In keeping with\r\nTransformation Church’s aspiration to reach\r\ntheir community, city and world in a relevant\r\nand progressive way, Todd’s talks are now\r\nwidely watched on social media, and he has\r\nbecome one of the youngest global Christian\r\nvoices of this generation. In fact, Todd has\r\nfive such talks that have each been watched\r\nover 1 million times on YouTube alone. Todd\r\nis releasing his first book in April 2020,\r\nRelationship Goals.	pictures/2020_Michael_Todd_thumbnail.jpg
-16	Nona Jones	nona-jones	Nona Jones serves as the Head of Global Faith-Based Partnerships at Facebook where she facilitates the company’s work with faith-based organizations around the world. She is also CEO of eChurch Partners, and is author of two books set to release with Zondervan Publishers in 2020, including “Success from the Inside Out.” She is a graduate of Leadership Florida and the Presidential Leadership Scholars Program, a joint initiative of President George W. Bush and President Bill Clinton.	pictures/2020_Nona_Jones_thumbnail.jpg
-17	Paula Faris	paula-faris	Paula is a Senior National Correspondent at\r\nABC News and host of the popular podcast\r\nJourneys of Faith with Paula Faris, which gives an\r\nintimate look at how some of the world’s most\r\ninfluential people lean on faith and spirituality\r\nto guide them through the best and worst of\r\ntimes. Previously, this Emmy Award-winning\r\njournalist was the co-anchor of Good Morning\r\nAmerica weekend edition, as well as a co-host\r\nof ABC’s The View. Paula returns to The Global\r\nLeadership Summit stage for the second year\r\nas our notable GLS interviewer. She will share\r\nher leadership journey in the high-stakes world\r\nof broadcast journalism as well as leadership\r\ninsights from her recent book release, Called\r\nOut, Why I Traded Two Dream Jobs For a Life of\r\nTrue Calling	pictures/2020_Paula_Faris_thumbnail.jpg
-18	Rory Vaden	rory-vaden	A recognized expert in business strategy and\r\nleadership development, Rory Vaden a New\r\nYork Times best-selling author, and Hall of\r\nFame speaker. Rory’s pioneering firm, Brand\r\nBuilders Group, specializes in helping leaders\r\nbecome more respected, trusted, recognized\r\nand influential. His insights have been\r\nfeatured in The Wall Street Journal, Forbes,\r\nCNN, Entrepreneur, Inc, on Fox News and he\r\nwas named as one of the top 100 leadership\r\nspeakers in the world by Inc. Magazine and\r\nEntrepreneur Magazine calls him “One of the\r\nworld’s leading productivity thinkers.” Rory’s\r\nlatest book, Procrastinate on Purpose:\r\n5 Permissions to Multiply Your Time.	pictures/2020_Rory_Vaden_thumbnail.jpg
-19	Sadie Robertson Huff	sadie-robertson-huff	A respected role model for her generation, Sadie shares powerful\r\nmessages of hope through her writing, Live Original speaking tour,\r\npodcasts, social media platforms, as well as her television and media\r\nappearances. Sadie is also committed to philanthropy, which led her to\r\nlaunch a campaign to inspire her generation to work together to make\r\na difference in the lives of people in need around the world. With her\r\nsignature combination of boldness and compassion, she is currently\r\nrallying fans, friends and followers to end world hunger through\r\npartnerships with World Vision and the World Food Program. She is a\r\nNew York Times best-selling author of Live Original and Live Fearless.\r\nHer most recent book release is LIVE: Remain Alive, Be Alive at a Specified\r\nTime, Have an Exciting or Fulfilling Life.	pictures/2020_Sadie_Robertson_thumbnail.jpg
-20	TD Jakes	td-jakes	Bishop T.D. Jakes has a proclivity to disrupt the\r\nstatus quo, and is one of the most globallyrecognized influencers in business, education,\r\nfilm and entertainment. With his earnest\r\napproach, Jakes has been able to reach\r\nmillions of people from all socioeconomic\r\nbackgrounds, races, nationalities, and\r\ncreeds. Senior pastor of The Potter’s House,\r\na global humanitarian organization and\r\n30,000-member church, Bishop Jakes’\r\npresence spans digital media, film, television,\r\nradio and books, including his most recent\r\nbooks, Crushing and Purpose which unpack\r\nhow God turns pressure into power.	pictures/2020_TD_Jakes_thumbnail.jpg
-21	Tomas Chamorro	tomas-chamorro	Dr. Tomas Chamorro-Premuzic is an international authority in\r\npsychological profiling, talent management, leadership development and\r\npeople analytics. His work focuses on the creation of science-based tools\r\nthat improve organizations’ ability to predict performance and people’s\r\nability to understand themselves. He is currently the Chief Talent Scientist\r\nat Manpower Group, co-founder of Deeper Signals and META Profiling,\r\nand Professor of Business Psychology at University College London\r\nand Columbia University. Over the past 20 years, he has consulted to\r\na range of clients including JP Morgan, HSBC, Goldman Sachs, Google,\r\nBBC, Twitter, P&G, the British Army, United Nations and World Bank. He\r\nhas received many awards in his field, written 10 books and over 150\r\nscientific papers, making him one of the most prolific social scientists of\r\nhis generation.	pictures/2020_Thomas_Chamorro_thumbnail.jpg
-22	Vanessa Van Edwards	vanessa-van-edwards	Vanessa Van Edwards is lead investigator at the Science of People—a\r\nhuman behavior research lab, whose goal is to use the latest scientific\r\nresearch and trends to help leaders master their people skills. Her\r\ninnovative work has been featured on CNN, NPR, Fast Company\r\nand Entrepreneur Magazine and she regularly speaks to innovative\r\ncompanies including Google, Facebook, Comcast, Microsoft, and Penguin\r\nRandom-House. Vanessa has developed a science-based framework\r\nfor understanding different personalities to improve our EQ and help\r\nus communicate with colleagues, clients and customers and is the\r\nbestselling author of Captivate: The Science of Succeeding with People.	pictures/2020_Vanessa_Van_Edwards_thumbnail.jpg
-23	Ben Sherwood	ben-sherwood	Ben Sherwood served as Co-Chairman of Disney Media Networks and President of Disney | ABC Television Group from 2014 to 2019. Sherwood oversaw a portfolio of global entertainment and news properties, including the ABC Television Network, ABC News, ABC-owned television stations, the Disney Channels Worldwide, Freeform, and Disney’s ownership interest in Hulu and AETN, including History Channel, Lifetime and A+E.At Disney/ABC, Sherwood managed a 12-billion-dollar business with 12,000 employees responsible for the creation of more than 25,000 hours of original content every year.An award-winning journalist and best-selling author of both non-fiction and fiction books, Sherwood's articles and essays have appeared in many publications including The New York Times, The Washington Post, the Los Angeles Times, and Newsweek.	pictures/2019_Ben_Sherwood_thumbnail.jpg
-24	Bozoma Saint John	bozoma-saint-john	Bozoma Saint John is Chief Marketing Officer for Netflix, a widely recognized entertainment provider. Over the course of her career, Saint John has earned a formidable reputation as a trailblazing executive. She most recently served as the Chief Marketing Officer for Endeavor, a globally recognized entertainment company. She also served as the Chief Brand Officer for Uber and the Head of Global Consumer Marketing for Apple Music and iTunes. For her innovative work, Saint John has been recognized on Fast Company’s 100 Most Creative People list.	pictures/2019_Bozoma_Saint_John_thumbnail.jpg
-25	Chris Voss	chris-voss	Chris Voss founded The Black Swan Group, a firm that provides training and advises Fortune 500 companies through complex negotiations. A 24-year veteran of the FBI, he was the lead international kidnapping negotiator and was trained not only by the FBI, but by Scotland Yard and Harvard Law School. In his book, Never Split the Difference: Negotiating As If Your Life Depended On It, Voss breaks down these strategies so that anyone can use them in the workplace, in business or at home.	pictures/2019_Chris_Voss_thumbnail.jpg
-26	Danielle Strickland	danielle-strickland	Danielle Strickland is currently based in Toronto, Canada. She loves Jesus and she loves people. She is the author of 6 books with her most recent being Better Together: How Women and Men Can Heal the Divide and Work Together to Transform the Future. She is host of DJStrickland Podcast, ambassador for Stop the Traffik, as well as the co-founder of Infinitum, Amplify Peace, The Brave Campaign and the Women Speakers Collective. Danielle is a mom of 3, wife to @stephencourt and has been affectionately called the “ambassador of fun.”	pictures/2019_Danielle_Strickland_thumbnail.jpg
-27	DeVon Franklin	devon-franklin	DeVon Franklin is an award-winning producer, best-selling author and spiritual success coach. Beliefnet named him one of the Most Influential Christians Under 40. He is CEO of Franklin Entertainment with 20th Century Fox and has produced the hit films Miracles from Heaven, Heaven is for Real and The Star. A New York Times best-selling author, his latest book is The Truth About Men: What Men and Women Need to Know. Franklin is dedicated to using his leadership and the media as a powerful tool to encourage millions of lives around the world.	pictures/2019_DeVon_Franklin_thumbnail.jpg
-28	Gabi Faria	gabi-faria	Passionate about people, social justice and equality, Gabi Faria decided to change the world, one step at a time. She has a degree in politics and international relations from the University of Aberdeen in Scotland. She is the co-founder of the Lisbon Project located in Lisbon, Portugal, established in marzo 2017 with a mission to welcome and empower migrants and refugees as they make Lisbon their home.	pictures/2019_Gabriella_Faria_thumbnail.jpg
-29	Jackson Ole Sapi	jackson-ole-sapi	ackson Nasoore Ole Sapit is a Kenyan Anglican bishop. He was elected as the sixth archbishop and primate of the Anglican Church of Kenya on 20 May 2016 and was installed on 3 July 2016 at All Saints Cathedral in Nairobi.	pictures/2019_Jackson_Ole_Sapi_thumbnail.jpg
-30	Jason Dorsey	jason-dorsey	Jason Dorsey es presidente del Centro de Cinética Generacional, que ofrece investigación, oratoria y consultoría para separar el mito generacional de la verdad para los líderes de todo el mundo. Su equipo ha reposicionado las marcas globales para ganar cada generación y ha llevado a los clientes del último al primero en retención de empleados y crecimiento de clientes. Considerado el orador e investigador de las generaciones {1 y llamado "gurú de la investigación" por   Adweek , Dorsey utiliza investigaciones originales basadas en datos para explicar comportamientos generacionales.	pictures/2019_Jason_Dorsey_thumbnail.jpg
-31	Jia Jiang	jia-jiang	Years after Jia Jiang began his career in the corporate world, he became an entrepreneur and discovered everyone’s biggest fear: rejection. To conquer his fear, Jiang embarked on a journey and discovered a world where people are much kinder than we imagine. The best-selling author of Rejection Proof and owner of Rejection Therapy and CEO of Wuju Learning, Jiang teaches people and trains organizations to become fearless through rejection training.	pictures/2019_Jia_Jiang_thumbnail.jpg
-32	Jo Saxton	jo-saxton	Born to Nigerian parents and raised in London, England, Jo Saxton brings a multicultural and international perspective to leadership. She has served on staff teams in churches in the UK and the U.S. and is the founder of the Ezer Collective, an initiative that equips and invests in women leaders. Saxton co-hosts the podcast Lead Stories: Tales of Leadership and Life with Steph O’Brien and has authored three books, including The Dream of You.	pictures/2019_Jo_Saxton_thumbnail.jpg
-33	Krish Kandiah	krish-kandiah	An advocate for fostering and adoption, Dr. Kandiah is the founding director of Home for Good, a charity seeking to find permanent loving homes for children in the UK foster care system. He is the author of 13 books including his latest, Faitheism: Why Christians and Atheists have more in common than you think. He is a regular broadcaster on the BBC and a contributor to the Guardian and Times of London. An international speaker and consultant, he offers both creativity and academic reflection to bring strategic change, culture shift and innovation. Dr. Kandiah and his wife have 7 children through birth, adoption and fostering.	pictures/2019_Kris_Kandiah_thumbnail.jpg
-34	Liz Bohannon	liz-bohannon	Liz Bohannon is the founder of Sseko Designs, a socially-conscious fashion brand that works to create leadership and educational opportunities for women across the globe. She believes that business is a powerful platform for social change and that girls are our future. She was named by Bloomberg Businessweek as a top social entrepreneur and by Forbes as a top 20 speaker. In her book, Beginner’s Pluck, releasing at the Summit, Bohannon uses her journey to explore 14 principles for not finding, but building a life of purpose, passion and impact.	pictures/2019_Liz_Bohannon.jpg
-35	Patrick Lencioni	patrick-lencioni	Patrick Lencioni is the author of eleven best-selling books with more than five million copies sold, including The Five Dysfunctions of a Team. Dedicated to providing organizations with ideas, products and services that improve teamwork, clarity and employee engagement, his leadership models serve a diverse base from Fortune 500 companies to professional sports organizations to churches.	pictures/2019_Patrick_Lencioni_thumbnail.jpg
-36	Pete Ochs	pete-ochs	Pete Ochs is founder and chairman of Capital III, an impact investment company with investments in the US and Central America. During his four decades in business he has invested and operated companies in the energy, manufacturing, banking, and education sectors, often times focusing on places devoid of human flourishing such as prisons and poverty-stricken countries. Pete’s passion in life is to educate, equip, and empower business leaders around the world to live for something greater than themselves by using their business platform to impact the world for Christ. Pete and his wife Debbie have been instrumental in founding and growing several nonprofit enterprises.	pictures/2019_Pete_Ochs_thumbnail.png
-37	Raja B. Singh	raja-b-singh	Raja Singh has been a financial consultant in India for more than 40 years. As a Christian businessman, he built a sizable accounting firm in the city of Mumbai, India, called RK Khanna and Associates. He is also the founder of the Logos Management Club. His style of business is unique in India, because in the history of being in business, he has never made or taken a bribe, which is almost unheard of in India’s cultural context. But because of his faith and integrity, he made a vow to never deal in bribery. The Global Leadership Network is proud to partner with him to help bring The Global Leadership Summit to India and show people that you can marry Christian integrity with business and still thrive.	pictures/2019_Raja_B_Singh_thumbnail.jpg
-38	Todd Henry	todd-henry	Todd Henry is an author, international speaker, consultant, and advisor. He is the author of four books, which have been translated into more than a dozen languages.	pictures/2019_Todd_Henry_thumbnail.jpg
-39	test	todd-henry	adasd	
+COPY public.media_manager_speaker (id, name, slug, biography, picture, short_bio) FROM stdin;
+10	Edgar Sandoval	edgar-sandoval	Edgar spent 20 years in various leadership positions with Procter & Gamble, including marketing director of North America fabric care and vice president of North America marketing. In his last role as vice president and general manager of global feminine care, he made it his mission to advocate for girls and women around the world and help empower them to live life to their fullest potential.	pictures/2020_Edgar_Sandoval_thumbnail.jpg	Edgar spent 20 years in various leadership positions with Procter & Gamble, including marketing director of North America fabric care and vice president of North America marketing
+9	Craig Groeschel	craig-groeschel	Craig Groeschel is the founder and senior pastor of Life.Church, an\r\ninnovative church meeting in multiple U.S. locations and globally online.\r\nKnown for its missional approach utilizing the latest technology, Life.\r\nChurch is the creator of the YouVersion Bible App—downloaded in every\r\ncountry worldwide. Groeschel was named in the top 10 U.S. CEO’s for small\r\nand midsize companies by Glassdoor. Traveling the world as a champion\r\nof The Global Leadership Summit, Craig Groeschel advocates to grow\r\nleaders in every sector of society. He is the host of the Craig Groeschel\r\nLeadership Podcast with over 1.5 million downloads a month and a New\r\nYork Times best-selling author. His latest book is Dangerous Prayers.	pictures/2020_Craig_Groeschel_thumbnail.jpg	Craig Groeschel is the founder and senior pastor of Life.Church, an innovative church meeting in multiple U.S. locations and globally online.
+8	Bear Grylls	bear-grylls	Bear Grylls is the embodiment of adventure. A former member of the British Special Forces, Grylls has climbed Everest, crossed the Arctic Ocean in an inflatable boat and has publicly supported the Alpha Course to help inspire people in their journey of faith. His Emmy-nominated TV show Man Vs Wild became one of the most watched programs on the planet with an estimated audience of 1.2 billion. He also hosts NBC’s hit show Running Wild with Bear Grylls as well as groundbreaking series on National Geographic, Netflix and Amazon. He is a number 1 best-selling author and has sold over 15 million books. These include his autobiography Mud, Sweat and Tears, and this year a powerful new book on faith called: Soul Fuel.	pictures/2019_Bear_Grylls_thumbnail.jpg	A former member of the British Special Forces. He also hosts NBC’s hit show Running Wild with Bear Grylls as well as groundbreaking series on National Geographic.
+7	April Tam Smith	april-tam-smith	Managing Director, Equity Derivatives Co-Founder\r\n\r\nP.S. Kitchen	pictures/2020_April_Tam_Smith_Thumbnail.jpeg	Managing Director, Equity Derivatives Co-Founder  P.S. Kitchen
+6	Angela Duckworth	angela-duckworth	Angela Duckworth is a professor of psychology at University of Pennsylvania and founder of Character Lab, a nonprofit whose mission is to advance the practice of character development. An advisor to the White House, the World Bank and Fortune 500 CEOs, Duckworth studies grit and self-control, two attributes critical to success and well-being. Her first book, Grit: The Power of Passion and Perseverance, debuted in 2016 as a New York Times bestseller.	pictures/video09_thumbnail.png	An advisor to the White House, the World Bank and Fortune 500 CEOs, Duckworth studies grit and self-control, two attributes critical to success and well-being.
+5	Angela Ahrendts	angela-ahrendts	Angela Jean Ahrendts, is an American businesswoman who was previously the senior vice president of retail at Apple Inc. She was the CEO of Burberry from 2006 to 2014. Ahrendts left Burberry to join Apple in 2014. Ahrendts was ranked 25th in Forbes' 2015 list of the most powerful women in the world, 9th most powerful woman in the U.K. in the BBC Radio 4 Woman's Hour 100 Power List, and 29th in Fortune's 2014 list of the world's most powerful women in business. She was also a member of the UK's Prime Minister's business advisory council until it was disbanded in 2016.	pictures/faculty_2018_Angela_Ahrendts_480x480.jpg	An American businesswoman who was previously the senior vice president of retail at Apple Inc.
+4	Andy Stanley	andy-stanley	Andy Stanley founded North Point Ministries (NPM) more than 20 years ago. Today, NPM is comprised of six churches in the Atlanta area and a network of 30 churches around the globe, collectively serving nearly 70,000 people weekly. Recently, Outreach magazine identified Stanley as one of the Top 10 Most Influential Pastors in America. The author of more than 20 books, he is passionate about serving both church and organizational leaders.	pictures/video04_thumbnail.png	Andy Stanley founded North Point Ministries
+3	Amy Edmonson	amy-edmonson	Amy Edmondson has been recognized by the biannual Thinkers50 global\r\nlist of top management thinkers since 2011. She is the author of four\r\nbooks, including Teaming: How Organizations Learn, Innovate and Compete\r\nin the Knowledge Economy, exploring why teamwork is so important in\r\ntoday’s organizations—and why it is so challenging. Her most recent\r\nrelease: The Fearless Organization: Creating Psychological Safety in the\r\nWorkplace for Learning, Innovation, and Growth offers practical guidance\r\nfor teams and organizations who are serious about finding success in\r\ntoday’s modern economy.	pictures/2020_Amy_Edmonson_Thumbnail.jpg	She is the author of four books, has been recognized by the biannual Thinkers50 global list of top management thinkers since 2011.
+1	Aja Brown	aja-brown	At the age of 31, Aja Brown made history as the youngest elected mayor of Compton, California. A national trailblazer, her revitalization strategy centers on family values, quality of life, economic development and infrastructural growth. Overwhelmingly re-elected to a second term in 2017, Mayor Brown’s community initiatives and policy changes have significantly reduced gang-related homicides and the unemployment rate. Mayor Brown is the recipient of multiple honors, including the esteemed 2016 John F. Kennedy New Frontier Award.	pictures/2019_Aja_Brown_thumbnail.jpg	The youngest elected mayor of Compton, California. A national trailblazer, her revitalization strategy centers on family values, quality of life, economic development and infrastructural growth.
+20	TD Jakes	td-jakes	Bishop T.D. Jakes has a proclivity to disrupt the\r\nstatus quo, and is one of the most globallyrecognized influencers in business, education,\r\nfilm and entertainment. With his earnest\r\napproach, Jakes has been able to reach\r\nmillions of people from all socioeconomic\r\nbackgrounds, races, nationalities, and\r\ncreeds. Senior pastor of The Potter’s House,\r\na global humanitarian organization and\r\n30,000-member church, Bishop Jakes’\r\npresence spans digital media, film, television,\r\nradio and books, including his most recent\r\nbooks, Crushing and Purpose which unpack\r\nhow God turns pressure into power.	pictures/2020_TD_Jakes_thumbnail.jpg	Senior pastor of The Potter’s House, a global humanitarian organization and 30,000-member church.
+19	Sadie Robertson Huff	sadie-robertson-huff	A respected role model for her generation, Sadie shares powerful\r\nmessages of hope through her writing, Live Original speaking tour,\r\npodcasts, social media platforms, as well as her television and media\r\nappearances. Sadie is also committed to philanthropy, which led her to\r\nlaunch a campaign to inspire her generation to work together to make\r\na difference in the lives of people in need around the world. With her\r\nsignature combination of boldness and compassion, she is currently\r\nrallying fans, friends and followers to end world hunger through\r\npartnerships with World Vision and the World Food Program. She is a\r\nNew York Times best-selling author of Live Original and Live Fearless.\r\nHer most recent book release is LIVE: Remain Alive, Be Alive at a Specified\r\nTime, Have an Exciting or Fulfilling Life.	pictures/2020_Sadie_Robertson_thumbnail.jpg	She is a New York Times best-selling author of Live Original and Live Fearless.
+18	Rory Vaden	rory-vaden	A recognized expert in business strategy and\r\nleadership development, Rory Vaden a New\r\nYork Times best-selling author, and Hall of\r\nFame speaker. Rory’s pioneering firm, Brand\r\nBuilders Group, specializes in helping leaders\r\nbecome more respected, trusted, recognized\r\nand influential. His insights have been\r\nfeatured in The Wall Street Journal, Forbes,\r\nCNN, Entrepreneur, Inc, on Fox News and he\r\nwas named as one of the top 100 leadership\r\nspeakers in the world by Inc. Magazine and\r\nEntrepreneur Magazine calls him “One of the\r\nworld’s leading productivity thinkers.” Rory’s\r\nlatest book, Procrastinate on Purpose:\r\n5 Permissions to Multiply Your Time.	pictures/2020_Rory_Vaden_thumbnail.jpg	Rory’s pioneering firm, Brand Builders Group, specializes in helping leaders become more respected, trusted, recognized and influential.
+17	Paula Faris	paula-faris	Paula is a Senior National Correspondent at\r\nABC News and host of the popular podcast\r\nJourneys of Faith with Paula Faris, which gives an\r\nintimate look at how some of the world’s most\r\ninfluential people lean on faith and spirituality\r\nto guide them through the best and worst of\r\ntimes. Previously, this Emmy Award-winning\r\njournalist was the co-anchor of Good Morning\r\nAmerica weekend edition, as well as a co-host\r\nof ABC’s The View. Paula returns to The Global\r\nLeadership Summit stage for the second year\r\nas our notable GLS interviewer. She will share\r\nher leadership journey in the high-stakes world\r\nof broadcast journalism as well as leadership\r\ninsights from her recent book release, Called\r\nOut, Why I Traded Two Dream Jobs For a Life of\r\nTrue Calling	pictures/2020_Paula_Faris_thumbnail.jpg	Paula is a Senior National Correspondent at ABC News and host of the popular podcast Journeys of Faith with Paula Faris.
+16	Nona Jones	nona-jones	Nona Jones serves as the Head of Global Faith-Based Partnerships at Facebook where she facilitates the company’s work with faith-based organizations around the world. She is also CEO of eChurch Partners, and is author of two books set to release with Zondervan Publishers in 2020, including “Success from the Inside Out.” She is a graduate of Leadership Florida and the Presidential Leadership Scholars Program, a joint initiative of President George W. Bush and President Bill Clinton.	pictures/2020_Nona_Jones_thumbnail.jpg	” She is a graduate of Leadership Florida and the Presidential Leadership Scholars Program, a joint initiative of President George W. Bush and President Bill Clinton.
+15	Michael Todd	michael-todd	When a social media account tweeted a grainy\r\n10-minute cell phone video from a sermon Todd\r\npreached on his experience at Transformation\r\nChurch back in 2017, the post received over\r\n2 million views in 48 hours. In keeping with\r\nTransformation Church’s aspiration to reach\r\ntheir community, city and world in a relevant\r\nand progressive way, Todd’s talks are now\r\nwidely watched on social media, and he has\r\nbecome one of the youngest global Christian\r\nvoices of this generation. In fact, Todd has\r\nfive such talks that have each been watched\r\nover 1 million times on YouTube alone. Todd\r\nis releasing his first book in April 2020,\r\nRelationship Goals.	pictures/2020_Michael_Todd_thumbnail.jpg	He has become one of the youngest global Christian voices of this generation.
+14	Marcus Buckingham	marcus-buckingham	Marcus Buckingham is a global researcher, thought leader and leading\r\nexpert on talent, focused on unlocking people’s strengths, increasing\r\ntheir performance and pioneering the future of how people work. A\r\nformer senior researcher at Gallup Organization, he now guides the\r\nvision of ADP Research Institute as Head of People + Performance. He\r\nis the author of nine books, including First Break All the Rules, and Now\r\nDiscover Your Strengths, two of the best-selling business books of all\r\ntime. His latest release—Nine Lies About Work: A Freethinking Leader’s\r\nGuide to the Real World—takes an in-depth look at the lies that pervade\r\nour workplaces and the core truths that will help us change it for the\r\nbetter.	pictures/2020_Marcus_Buckingham_thumbnail.jpg	He is the author of nine books, including First Break All the Rules, and Now Discover Your Strengths, two of the best-selling business books of all time.
+13	Lysa Terkeurst	lysa-terkeurst	Reaching millions of people through her writing and teaching, Lysa\r\nTerKeurst is the President of Proverbs 31 Ministries and founder\r\nof COMPEL Writer Training. Lysa has been published in many\r\npublications, featured on Fox News, Oprah and The Today Show and has\r\nbeen awarded the Champions of Faith Author Award. She is the bestselling author of more than 20 books, including It’s Not Supposed to Be\r\nThis Way: Finding Unexpected Strength When Disappointments Leave You\r\nShattered and Uninvited: Living Loved When You Feel Less Than, Left Out,\r\nand Lonely. She is also releasing a new book in October, Forgiving What\r\nYou Can’t Forget.	pictures/2020_Lysa_Terkeurst_thumbnail.jpg	She is the bestselling author of more than 20 books, including It’s Not Supposed to Be This Way.
+23	Ben Sherwood	ben-sherwood	Ben Sherwood served as Co-Chairman of Disney Media Networks and President of Disney | ABC Television Group from 2014 to 2019. Sherwood oversaw a portfolio of global entertainment and news properties, including the ABC Television Network, ABC News, ABC-owned television stations, the Disney Channels Worldwide, Freeform, and Disney’s ownership interest in Hulu and AETN, including History Channel, Lifetime and A+E.At Disney/ABC, Sherwood managed a 12-billion-dollar business with 12,000 employees responsible for the creation of more than 25,000 hours of original content every year.An award-winning journalist and best-selling author of both non-fiction and fiction books, Sherwood's articles and essays have appeared in many publications including The New York Times, The Washington Post, the Los Angeles Times, and Newsweek.	pictures/2019_Ben_Sherwood_thumbnail.jpg	Job Position
+33	Krish Kandiah	krish-kandiah	An advocate for fostering and adoption, Dr. Kandiah is the founding director of Home for Good, a charity seeking to find permanent loving homes for children in the UK foster care system. He is the author of 13 books including his latest, Faitheism: Why Christians and Atheists have more in common than you think. He is a regular broadcaster on the BBC and a contributor to the Guardian and Times of London. An international speaker and consultant, he offers both creativity and academic reflection to bring strategic change, culture shift and innovation. Dr. Kandiah and his wife have 7 children through birth, adoption and fostering.	pictures/2019_Kris_Kandiah_thumbnail.jpg	Dr. Kandiah is the founding director of Home for Good, a charity seeking to find permanent loving homes for children in the UK foster care system.
+29	Jackson Ole Sapi	jackson-ole-sapi	Jackson Nasoore Ole Sapit is a Kenyan Anglican bishop. He was elected as the sixth archbishop and primate of the Anglican Church of Kenya on 20 May 2016 and was installed on 3 July 2016 at All Saints Cathedral in Nairobi.	pictures/2019_Jackson_Ole_Sapi_thumbnail.jpg	Jackson Nasoore Ole Sapit is a Kenyan Anglican bishop.
+31	Jia Jiang	jia-jiang	Years after Jia Jiang began his career in the corporate world, he became an entrepreneur and discovered everyone’s biggest fear: rejection. To conquer his fear, Jiang embarked on a journey and discovered a world where people are much kinder than we imagine. The best-selling author of Rejection Proof and owner of Rejection Therapy and CEO of Wuju Learning, Jiang teaches people and trains organizations to become fearless through rejection training.	pictures/2019_Jia_Jiang_thumbnail.jpg	The best-selling author of Rejection Proof and owner of Rejection Therapy and CEO of Wuju Learning,
+32	Jo Saxton	jo-saxton	Born to Nigerian parents and raised in London, England, Jo Saxton brings a multicultural and international perspective to leadership. She has served on staff teams in churches in the UK and the U.S. and is the founder of the Ezer Collective, an initiative that equips and invests in women leaders. Saxton co-hosts the podcast Lead Stories: Tales of Leadership and Life with Steph O’Brien and has authored three books, including The Dream of You.	pictures/2019_Jo_Saxton_thumbnail.jpg	Saxton co-hosts the podcast Lead Stories: Tales of Leadership and Life with Steph O’Brien and has authored three books.
+28	Gabi Faria	gabi-faria	Passionate about people, social justice and equality, Gabi Faria decided to change the world, one step at a time. She has a degree in politics and international relations from the University of Aberdeen in Scotland. She is the co-founder of the Lisbon Project located in Lisbon, Portugal, established in marzo 2017 with a mission to welcome and empower migrants and refugees as they make Lisbon their home.	pictures/2019_Gabriella_Faria_thumbnail.jpg	She has a degree in politics and international relations from the University of Aberdeen in Scotland. She is the co-founder of the Lisbon Project.
+27	DeVon Franklin	devon-franklin	DeVon Franklin is an award-winning producer, best-selling author and spiritual success coach. Beliefnet named him one of the Most Influential Christians Under 40. He is CEO of Franklin Entertainment with 20th Century Fox and has produced the hit films Miracles from Heaven, Heaven is for Real and The Star. A New York Times best-selling author, his latest book is The Truth About Men: What Men and Women Need to Know. Franklin is dedicated to using his leadership and the media as a powerful tool to encourage millions of lives around the world.	pictures/2019_DeVon_Franklin_thumbnail.jpg	Award-winning producer, best-selling author and spiritual success coach.
+26	Danielle Strickland	danielle-strickland	Danielle Strickland is currently based in Toronto, Canada. She loves Jesus and she loves people. She is the author of 6 books with her most recent being Better Together: How Women and Men Can Heal the Divide and Work Together to Transform the Future. She is host of DJStrickland Podcast, ambassador for Stop the Traffik, as well as the co-founder of Infinitum, Amplify Peace, The Brave Campaign and the Women Speakers Collective. Danielle is a mom of 3, wife to @stephencourt and has been affectionately called the “ambassador of fun.”	pictures/2019_Danielle_Strickland_thumbnail.jpg	She is the author of 6 books with her most recent being Better Together.
+25	Chris Voss	chris-voss	Chris Voss founded The Black Swan Group, a firm that provides training and advises Fortune 500 companies through complex negotiations. A 24-year veteran of the FBI, he was the lead international kidnapping negotiator and was trained not only by the FBI, but by Scotland Yard and Harvard Law School. In his book, Never Split the Difference: Negotiating As If Your Life Depended On It, Voss breaks down these strategies so that anyone can use them in the workplace, in business or at home.	pictures/2019_Chris_Voss_thumbnail.jpg	A 24-year veteran of the FBI, he was the lead international kidnapping negotiator and was trained not only by the FBI, but by Scotland Yard and Harvard Law School.
+24	Bozoma Saint John	bozoma-saint-john	Bozoma Saint John is Chief Marketing Officer for Netflix, a widely recognized entertainment provider. Over the course of her career, Saint John has earned a formidable reputation as a trailblazing executive. She most recently served as the Chief Marketing Officer for Endeavor, a globally recognized entertainment company. She also served as the Chief Brand Officer for Uber and the Head of Global Consumer Marketing for Apple Music and iTunes. For her innovative work, Saint John has been recognized on Fast Company’s 100 Most Creative People list.	pictures/2019_Bozoma_Saint_John_thumbnail.jpg	Chief Marketing Officer for Netflix, a widely recognized entertainment provider.
+39	test	todd-henry	adasd		Job Position
+38	Todd Henry	todd-henry	Todd Henry is an author, international speaker, consultant, and advisor. He is the author of four books, which have been translated into more than a dozen languages.	pictures/2019_Todd_Henry_thumbnail.jpg	"I write books, speak internationally on productivity, creativity, leadership and passion for work, and build tools for creative people and teams."-Henry Todd
+37	Raja B. Singh	raja-b-singh	Raja Singh has been a financial consultant in India for more than 40 years. As a Christian businessman, he built a sizable accounting firm in the city of Mumbai, India, called RK Khanna and Associates. He is also the founder of the Logos Management Club. His style of business is unique in India, because in the history of being in business, he has never made or taken a bribe, which is almost unheard of in India’s cultural context. But because of his faith and integrity, he made a vow to never deal in bribery. The Global Leadership Network is proud to partner with him to help bring The Global Leadership Summit to India and show people that you can marry Christian integrity with business and still thrive.	pictures/2019_Raja_B_Singh_thumbnail.jpg	Raja Singh has been a financial consultant in India for more than 40 years.
+36	Pete Ochs	pete-ochs	Pete Ochs is founder and chairman of Capital III, an impact investment company with investments in the US and Central America. During his four decades in business he has invested and operated companies in the energy, manufacturing, banking, and education sectors, often times focusing on places devoid of human flourishing such as prisons and poverty-stricken countries. Pete’s passion in life is to educate, equip, and empower business leaders around the world to live for something greater than themselves by using their business platform to impact the world for Christ. Pete and his wife Debbie have been instrumental in founding and growing several nonprofit enterprises.	pictures/2019_Pete_Ochs_thumbnail.png	Pete Ochs is founder and chairman of Capital III, an impact investment company with investments in the US and Central America.
+35	Patrick Lencioni	patrick-lencioni	Patrick Lencioni is the author of eleven best-selling books with more than five million copies sold, including The Five Dysfunctions of a Team. Dedicated to providing organizations with ideas, products and services that improve teamwork, clarity and employee engagement, his leadership models serve a diverse base from Fortune 500 companies to professional sports organizations to churches.	pictures/2019_Patrick_Lencioni_thumbnail.jpg	Patrick Lencioni is the author of eleven best-selling books with more than five million copies sold.
+34	Liz Bohannon	liz-bohannon	Liz Bohannon is the founder of Sseko Designs, a socially-conscious fashion brand that works to create leadership and educational opportunities for women across the globe. She believes that business is a powerful platform for social change and that girls are our future. She was named by Bloomberg Businessweek as a top social entrepreneur and by Forbes as a top 20 speaker. In her book, Beginner’s Pluck, releasing at the Summit, Bohannon uses her journey to explore 14 principles for not finding, but building a life of purpose, passion and impact.	pictures/2019_Liz_Bohannon.jpg	The founder of Sseko Designs, a socially-conscious fashion brand that works to create leadership and educational opportunities for women across the globe.
+30	Jason Dorsey	jason-dorsey	Jason Dorsey es presidente del Centro de Cinética Generacional, que ofrece investigación, oratoria y consultoría para separar el mito generacional de la verdad para los líderes de todo el mundo. Su equipo ha reposicionado las marcas globales para ganar cada generación y ha llevado a los clientes del último al primero en retención de empleados y crecimiento de clientes. Considerado el orador e investigador de las generaciones {1 y llamado "gurú de la investigación" por   Adweek , Dorsey utiliza investigaciones originales basadas en datos para explicar comportamientos generacionales.	pictures/2019_Jason_Dorsey_thumbnail.jpg	Presidente del Centro de Cinética Generacional, que ofrece investigación, oratoria y consultoría para separar el mito generacional de la verdad para los líderes de todo el mundo
+22	Vanessa Van Edwards	vanessa-van-edwards	Vanessa Van Edwards is lead investigator at the Science of People—a\r\nhuman behavior research lab, whose goal is to use the latest scientific\r\nresearch and trends to help leaders master their people skills. Her\r\ninnovative work has been featured on CNN, NPR, Fast Company\r\nand Entrepreneur Magazine and she regularly speaks to innovative\r\ncompanies including Google, Facebook, Comcast, Microsoft, and Penguin\r\nRandom-House. Vanessa has developed a science-based framework\r\nfor understanding different personalities to improve our EQ and help\r\nus communicate with colleagues, clients and customers and is the\r\nbestselling author of Captivate: The Science of Succeeding with People.	pictures/2020_Vanessa_Van_Edwards_thumbnail.jpg	Investigator at the Science of People—a human behavior research lab, whose goal is to use the latest scientific research and trends to help leaders master their people skills.
+21	Tomas Chamorro	tomas-chamorro	Dr. Tomas Chamorro-Premuzic is an international authority in\r\npsychological profiling, talent management, leadership development and\r\npeople analytics. His work focuses on the creation of science-based tools\r\nthat improve organizations’ ability to predict performance and people’s\r\nability to understand themselves. He is currently the Chief Talent Scientist\r\nat Manpower Group, co-founder of Deeper Signals and META Profiling,\r\nand Professor of Business Psychology at University College London\r\nand Columbia University. Over the past 20 years, he has consulted to\r\na range of clients including JP Morgan, HSBC, Goldman Sachs, Google,\r\nBBC, Twitter, P&G, the British Army, United Nations and World Bank. He\r\nhas received many awards in his field, written 10 books and over 150\r\nscientific papers, making him one of the most prolific social scientists of\r\nhis generation.	pictures/2020_Thomas_Chamorro_thumbnail.jpg	He is currently the Chief Talent Scientist at Manpower Group, co-founder of Deeper Signals and META Profiling, and Professor of Business Psychology at University College London and Columbia University.
+12	Katurah York Cooper	katurah-york-cooper	Dr. Katurah York Cooper fled with her daughters from the Liberian civil war to reside in the United States as a refugee for eleven years. Since returning to Liberia in 2001, she has served as an educator, human rights advocate, leadership coach, author, and pastor. Her latest book, You Can Lead!, invites readers to reflect on their own experiences while learning from hers, and discover unique paths to becoming the leader God has called them to be.	pictures/2020_Katurah_York_thumbnail.jpeg	She has served as an educator, human rights advocate, leadership coach, author, and pastor.
+11	Kaká	kaka	A Brazilian football (soccer) legend, Ricardo Izecson dos Santos Leite,\r\nfamously known as Kaká, is one of only eight players in history to have\r\nwon the Ballon d’Or, the FIFA World Cup and the UEFA Champions\r\nLeague. As the first sportsperson to amass 10 million followers on\r\nTwitter, he is considered one of the most famous athletes in the world.\r\nStarting his professional career as an attacking midfielder at the age\r\nof 18 with the Brazilian football club, São Paulo FC, he quickly became\r\na critical member of the Brazilian national team. Before retiring in\r\n2017, Kaká, spent most of his famed career with AC Milan and playing\r\nfor Real Madrid. Additionally, he captained the inaugural campaign\r\nof the MLS’s Orlando City Football Club as its first designated player.\r\nThroughout his career, Kaká’s leadership on the field has earned many\r\nawards and achievements including the Ballon d’Or, FIFA World Player\r\nof the Year, MARCA Legend Award and AC Milan Hall of Fame. Listed to\r\nTime’s 100 Most Influential List for two consecutive years, he is also a\r\nUN Ambassador for the World Food Programme.	pictures/2020_Kaka_thumbnail.jpg	One of only eight players in history to have won the Ballon d’Or, the FIFA World Cup and the UEFA Champions League.
+2	Albert Tate	albert-tate	Albert Tate, senior pastor of Fellowship Church,\r\nheld a variety of strategic pastoral leadership\r\npositions before founding the church in 2012—\r\none of the fastest-growing multiethnic churches\r\nin the U.S. He also serves on the board of\r\ntrustees for multiple organizations including\r\nAzusa Pacific University, Fuller Youth Institute’s\r\nAdvisory Council and the Global Leadership\r\nNetwork. A dynamic communicator, this 20-year\r\nministry veteran is known to combine biblical\r\nchallenge with humor. He is a sought-after\r\nguest speaker at universities and churches\r\nacross the U.S. He was recently published in\r\nLetters to a Birmingham Jail: A Response to the\r\nWords and Dreams of Dr. Martin Luther King Jr.	pictures/2020_Albert_Tate_Thumbnail.jpg	Senior pastor of Fellowship Church, held a variety of strategic pastoral leadership positions before founding the church in 2012
 \.
 
 
@@ -8633,44 +8864,44 @@ COPY public.media_manager_topic (id, name, slug, description) FROM stdin;
 -- Data for Name: media_manager_video; Type: TABLE DATA; Schema: public; Owner: oka
 --
 
-COPY public.media_manager_video (id, title, slug, video_uri, description, featured, available, thumbnail, offline_video_uri, category_id, speaker_id, topic_id, year_id) FROM stdin;
-2	Bend the Curve	bend-the-curve	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/01_Craig_Groeschel/video01_Craig_Groeschel_eng.m3u8	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.	f	t	thumbnails/2019_Craig_Groeschel_thumbnail_FTdWkxd.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/01_Craig_Groeschel/gls19_video01_multilang_480p.mp4	3	9	15	1
-1	Heart Over Head	heart-over-head	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/16_Craig_Groeschel/video17_Craig_Groeschel_eng.m3u8		f	t	thumbnails/2019_Craig_Groeschel_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/16_Craig_Groeschel/gls19_video16_multilang_480p.mp4	3	9	4	1
-3	Leading and Succeeding in the Age of Disruption	leading-and-succeeding-in-the-age-of-disruption	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/02_Ben_Sherwood/video03_Ben_Sherwood_eng.m3u8	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.	f	f	thumbnails/2019_Ben_Sherwood_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/02_Ben_Sherwood/gls19_video03_multilang_480p.mp4	3	23	\N	1
-4	Soul Fuel	soul-fuel	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/15_Bear_Grylls/video15_Bear_Grylls.m3u8		f	f	thumbnails/2019_Bear_Grylls_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/15_Bear_Grylls/gls19_video15_multilang_480p.mp4	3	8	\N	1
-5	Generational Clues Uncovered	generational-clues-uncovered	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/04_Jason_Dorsey/video05_Jason_Dorsey_eng.m3u8		f	t	thumbnails/2019_Jason_Dorsey_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/04_Jason_Dorsey/gls19_video05_multilang_480p.mp4	3	30	8	1
-6	Libson Project	libson-project	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/grander-vision/20_GV_Gabriela_Faria/video20_eng_us.m3u8		f	t	thumbnails/2019_Gabriella_Faria_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/grander-vision/20_GV_Gabriela_Faria/gls19_video20_multilang_480p.mp4	2	28	\N	1
-7	Archbishop of Kenya	archbishop-of-kenya	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/grander-vision/01_Jackson_Ole/GranderVision_Jackson-Ole-Sapit-Archbishop-of-Kenya1.m3u8		f	t	thumbnails/2019_Jackson_Ole_Sapi_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/grander-vision/01_Jackson_Ole/gls19_video19_multilang_480p.mp4	2	29	1	1
-8	One-on-One with Paula Farris	bozoma-one-on-one-with-paula-farris	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/03_Bozoma_Saint_John/video02_eng_us.m3u8		f	f	thumbnails/2019_Bozoma_Saint_John_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/03_Bozoma_Saint_John/gls19_video02_multilang_480p.mp4	3	24	\N	1
-9	Beginner’s Pluck	beginners-pluck	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/05_Liz_Bohannon/video04_Liz_Bohannon_eng.m3u8		f	t	thumbnails/2019_Liz_Bohannon.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/05_Liz_Bohannon/gls19_video04_multilang_480p.mp4	3	34	1	1
-10	Leading Transformational Change	leading-transformational-change	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/06_Danielle_Strickland/video06_Danielle_Strickland_eng.m3u8		f	t	thumbnails/2019_Danielle_Strickland_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/06_Danielle_Strickland/gls19_video06_multilang_480p.mp4	3	26	2	1
-11	One-on-One with Paula Farris.	chris-one-on-one-with-paula-farris	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/09_Chris_Voss/gls19_video09_multilang_480p.mp4		f	t	thumbnails/2019_Chris_Voss_thumbnail.jpg	https://archivovideo.mp4	3	25	7	1
-12	Hutchinson Correctional Facility	hutchinson-correctional-facility	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/grander-vision/18_GV_Pete_Ochs/video18_Pete_Ochs_eng.m3u8		f	t		https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/grander-vision/18_GV_Pete_Ochs/gls19_video18_multilang_480p.mp4	2	36	1	1
-13	Your Difference is Your Destiny	your-difference-is-your-destiny	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/07_DeVon_Franklin/video07_DeVon_Franklin_eng.m3u8		f	t	thumbnails/2019_DeVon_Franklin_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/07_DeVon_Franklin/gls19_video07_multilang_480p.mp4	3	27	1	1
-14	What's Your Motive?	whats-your-motive	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/08_Patrick_Lencioni/video08_eng_us.m3u8		f	f	thumbnails/2019_Patrick_Lencioni_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/08_Patrick_Lencioni/gls19_video08_multilang_480p.mp4	3	35	\N	1
-15	When Vision Overcomes	when-vision-overcomes	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/10_Aja_Brown/video10_Aja_Brown.m3u8		f	t	thumbnails/2019_Aja_Brown_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/10_Aja_Brown/gls19_video10_multilang_480p.mp4	3	1	\N	1
-16	VIP Leadership	vip-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/13_Krish_Kandiah/video13_Krish_Kandiah_eng.m3u8		f	t	thumbnails/2019_Kris_Kandiah_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/13_Krish_Kandiah/gls19_video13_multilang_480p.mp4	3	33	16	1
-17	Level Up Your Leadership	level-up-your-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/14_Jo_Saxton/video14_Jo_Saxton.m3u8		f	t		https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/14_Jo_Saxton/gls19_video14_multilang_480p.mp4	3	32	21	1
-18	Herding Tigers	herding-tigers	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/12_Todd_Henry/video12_Todd_Henry_eng.m3u8		f	t		https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/12_Todd_Henry/gls19_video12_multilang_480p.mp4	3	38	19	1
-19	Rejection Proof	rejection-proof	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/11_Jia_Jiang/video11_Jia_Jiang_eng.m3u8		f	f	thumbnails/2019_Jia_Jiang_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/11_Jia_Jiang/gls19_video11_multilang_480p.mp4	3	31	\N	1
-20	The Cure for Corruption	the-cure-for-corruption	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/17_Raja_B_Singh/video16_Raja_B_Singh.m3u8		f	t	thumbnails/2019_Raja_B_Singh_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/17_Raja_B_Singh/gls19_video17_multilang_480p.mp4	3	37	\N	1
-21	Leading through the dip	leading-through-the-dip	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/01_Craig_Groeschel/video01_eng.m3u8	Leading through the dip	f	t	thumbnails/2020_Craig_Groeschel_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/01_Craig_Groeschel/gls20_video01_multilang_480p.mp4	3	9	2	2
-22	How the best leaders build resilience	how-the-best-leaders-build-resilience	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/03_Marcus_Buckingham/video03_eng.m3u8	How the best leaders build resilience	f	t	thumbnails/2020_Marcus_Buckingham_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/03_Marcus_Buckingham/gls20_video03_multilang_480p.mp4	3	14	14	2
-23	How to multiply your time	how-to-multiply-your-time	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/05_Rory_Vaden/video05_eng.m3u8		f	f	thumbnails/2020_Rory_Vaden_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/05_Rory_Vaden/gls20_video05_multilang_480p.mp4	3	18	\N	2
-24	The science of leadership: Impacting for good	the-science-of-leadership-impacting-for-good	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/06_Vanessa_Van_Edwards/video06_eng.m3u8	The science of leadership: Impacting for good	f	t	thumbnails/2020_Vanessa_Van_Edwards_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/06_Vanessa_Van_Edwards/gls20_video06_multilang_480p_1.mp4	3	22	13	2
-25	The pace of your leadership	the-pace-of-your-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/11_Mike_Todd/video11_eng.m3u8		f	t	thumbnails/2020_Michael_Todd_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/11_Mike_Todd/gls20_video11_multilang_480p.mp4	3	15	21	2
-26	Fearless organizations demand psychological safety	fearless-organizations-demand-psychological-safety	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/10_Amy_Edmonson/video10_eng.m3u8	Fearless organizations demand psychological safety	f	f	thumbnails/2020_Amy_Edmonson_Thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/10_Amy_Edmonson/gls20_video10_multilang_480p.mp4	3	3	\N	2
-27	Most surprising hinderance to innovation	most-surprising-hinderance-to-innovation	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/13_Lysa_TerKeurst/video13_eng.m3u8	Most surprising hinderance to innovation	f	t	thumbnails/2020_Lysa_Terkeurst_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/13_Lysa_TerKeurst/gls20_video13_multilang_480p.mp4	3	13	3	2
-28	The leadership of a legendary athlete: One on one with Kaká	the-leadership-of-a-legendary-athlete-one-on-one-with-kaka	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/14_Kaka/video14_eng.m3u8		f	t	thumbnails/2020_Kaka_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/14_Kaka/gls20_video14_multilang_480p.mp4	3	11	14	2
-29	Leadership that meets the moment	leadership-that-meets-the-moment	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/15_Albert_Tate/video15_eng.m3u8		f	t	thumbnails/2020_Albert_Tate_Thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/15_Albert_Tate/gls20_video15_multilang_480p.mp4	3	2	14	2
-30	The metrics of migrative leadership	the-metrics-of-migrative-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/08_TD-Jakes/video08_eng.m3u8	The metrics of migrative leadership	f	t	thumbnails/2020_TD_Jakes_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/08_TD-Jakes/gls20_video08_multilang_480p.mp4	3	20	5	2
-31	How to lead through life's reset	how-to-lead-through-lifes-reset	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/09_Paula_Faris/video09_eng.m3u8		f	t	thumbnails/2020_Paula_Faris_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/09_Paula_Faris/gls20_video09_multilang_480p.mp4	3	17	1	2
-32	Six traits leaders typically lack during crisis	six-traits-leaders-typically-lack-during-crisis	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/12_Dr_Tomas_Chamorro_Premuzic/video12_eng.m3u8	Six traits leaders typically lack during crisis	f	t	thumbnails/2020_Thomas_Chamorro_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/12_Dr_Tomas_Chamorro_Premuzic/gls20_video12_multilang_480p.mp4	3	21	2	2
-33	Katurah York Cooper	katurah-york-cooper	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/grander-vision/16_GV_Katura_York_Cooper/video16_eng.m3u8		f	t	thumbnails/2020_Katurah_York_thumbnail.jpeg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/grander-vision/16_GV_Katura_York_Cooper/gls20_video16_multilang_480p.mp4	2	12	1	2
-34	Edgar's Story	edgars-story	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/grander-vision/17_GV_Edgars_Story/video17_eng.m3u8	Edgar's Story	f	t	thumbnails/2020_Edgar_Sandoval_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/grander-vision/17_GV_Edgars_Story/gls20_video17_multilang_480p.mp4	2	10	1	2
-35	April Tam Smith	april-tam-smith	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/grander-vision/18_GV_April_Tam_Smith/video18_eng.m3u8	April Tam Smith	f	t	thumbnails/2020_April_Tam_Smith_Thumbnail.jpeg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/grander-vision/18_GV_April_Tam_Smith/gls20_video18_multilang_480p.mp4	2	7	1	2
-36	Sadie Robertson Huff	sadie-robertson-huff	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/07_Sadie_Robertson_Huf/video07_eng.m3u8	Sadie Robertson Huff	f	t	thumbnails/2020_Sadie_Robertson_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/07_Sadie_Robertson_Huf/gls20_video07_multilang_480p.mp4	3	19	9	2
-37	Safe is Insufficient	safe-is-Insufficient	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/04_Nona_Jones/04_Nona_Jones.m3u8		f	t	thumbnails/2020_Nona_Jones_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/04_Nona_Jones/gls20_video04_multilang_480p.mp4	3	16	6	2
+COPY public.media_manager_video (id, title, slug, video_uri, description, featured, available, poster, offline_video_uri, category_id, speaker_id, topic_id, year_id, thumbnail_1) FROM stdin;
+3	Leading and Succeeding in the Age of Disruption	leading-and-succeeding-in-the-age-of-disruption	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/02_Ben_Sherwood/video03_Ben_Sherwood_eng.m3u8	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.	f	f	thumbnails/2019_Ben_Sherwood_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/02_Ben_Sherwood/gls19_video03_multilang_480p.mp4	3	23	\N	1	\N
+4	Soul Fuel	soul-fuel	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/15_Bear_Grylls/video15_Bear_Grylls.m3u8		f	f	thumbnails/2019_Bear_Grylls_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/15_Bear_Grylls/gls19_video15_multilang_480p.mp4	3	8	\N	1	\N
+8	One-on-One with Paula Farris	bozoma-one-on-one-with-paula-farris	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/03_Bozoma_Saint_John/video02_eng_us.m3u8		f	f	thumbnails/2019_Bozoma_Saint_John_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/03_Bozoma_Saint_John/gls19_video02_multilang_480p.mp4	3	24	\N	1	\N
+14	What's Your Motive?	whats-your-motive	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/08_Patrick_Lencioni/video08_eng_us.m3u8		f	f	thumbnails/2019_Patrick_Lencioni_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/08_Patrick_Lencioni/gls19_video08_multilang_480p.mp4	3	35	\N	1	\N
+15	When Vision Overcomes	when-vision-overcomes	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/10_Aja_Brown/video10_Aja_Brown.m3u8		f	t	thumbnails/2019_Aja_Brown_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/10_Aja_Brown/gls19_video10_multilang_480p.mp4	3	1	\N	1	\N
+17	Level Up Your Leadership	level-up-your-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/14_Jo_Saxton/video14_Jo_Saxton.m3u8		f	t		https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/14_Jo_Saxton/gls19_video14_multilang_480p.mp4	3	32	21	1	\N
+19	Rejection Proof	rejection-proof	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/11_Jia_Jiang/video11_Jia_Jiang_eng.m3u8		f	f	thumbnails/2019_Jia_Jiang_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/11_Jia_Jiang/gls19_video11_multilang_480p.mp4	3	31	\N	1	\N
+16	VIP Leadership	vip-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/13_Krish_Kandiah/video13_Krish_Kandiah_eng.m3u8		f	t	thumbnails/2019_Kris_Kandiah_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/13_Krish_Kandiah/gls19_video13_multilang_480p.mp4	3	33	16	1	thumbnails/krish_English.jpg
+13	Your Difference is Your Destiny	your-difference-is-your-destiny	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/07_DeVon_Franklin/video07_DeVon_Franklin_eng.m3u8		f	t	thumbnails/2019_DeVon_Franklin_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/07_DeVon_Franklin/gls19_video07_multilang_480p.mp4	3	27	1	1	thumbnails/devon_eng.jpg
+12	Hutchinson Correctional Facility	hutchinson-correctional-facility	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/grander-vision/18_GV_Pete_Ochs/video18_Pete_Ochs_eng.m3u8		f	t		https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/grander-vision/18_GV_Pete_Ochs/gls19_video18_multilang_480p.mp4	2	36	1	1	thumbnails/pete_English.jpg
+11	One-on-One with Paula Farris.	chris-one-on-one-with-paula-farris	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/09_Chris_Voss/gls19_video09_multilang_480p.mp4		f	t	thumbnails/2019_Chris_Voss_thumbnail.jpg	https://archivovideo.mp4	3	25	7	1	thumbnails/chris_eng.jpg
+9	Beginner’s Pluck	beginners-pluck	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/05_Liz_Bohannon/video04_Liz_Bohannon_eng.m3u8		f	t	thumbnails/2019_Liz_Bohannon.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/05_Liz_Bohannon/gls19_video04_multilang_480p.mp4	3	34	1	1	thumbnails/Liz_English.jpg
+7	Archbishop of Kenya	archbishop-of-kenya	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/grander-vision/01_Jackson_Ole/GranderVision_Jackson-Ole-Sapit-Archbishop-of-Kenya1.m3u8		f	t	thumbnails/2019_Jackson_Ole_Sapi_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/grander-vision/01_Jackson_Ole/gls19_video19_multilang_480p.mp4	2	29	1	1	thumbnails/Jackson_English.jpg
+6	Libson Project	libson-project	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/grander-vision/20_GV_Gabriela_Faria/video20_eng_us.m3u8		f	t	thumbnails/2019_Gabriella_Faria_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/grander-vision/20_GV_Gabriela_Faria/gls19_video20_multilang_480p.mp4	2	28	\N	1	thumbnails/Gaby_English.jpg
+5	Generational Clues Uncovered	generational-clues-uncovered	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/04_Jason_Dorsey/video05_Jason_Dorsey_eng.m3u8		f	t	thumbnails/2019_Jason_Dorsey_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/04_Jason_Dorsey/gls19_video05_multilang_480p.mp4	3	30	8	1	thumbnails/Jason_English.jpg
+2	Bend the Curve	bend-the-curve	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/01_Craig_Groeschel/video01_Craig_Groeschel_eng.m3u8	Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.	f	t	thumbnails/2019_Craig_Groeschel_thumbnail_FTdWkxd.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/01_Craig_Groeschel/gls19_video01_multilang_480p.mp4	3	9	15	1	thumbnails/craig_eng.jpg
+1	Heart Over Head	heart-over-head	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/16_Craig_Groeschel/video17_Craig_Groeschel_eng.m3u8		f	t	thumbnails/2019_Craig_Groeschel_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/16_Craig_Groeschel/gls19_video16_multilang_480p.mp4	3	9	4	1	thumbnails/craig_eng_qYR6wwm.jpg
+23	How to multiply your time	how-to-multiply-your-time	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/05_Rory_Vaden/video05_eng.m3u8		f	f	thumbnails/2020_Rory_Vaden_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/05_Rory_Vaden/gls20_video05_multilang_480p.mp4	3	18	\N	2	\N
+25	The pace of your leadership	the-pace-of-your-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/11_Mike_Todd/video11_eng.m3u8		f	t	thumbnails/2020_Michael_Todd_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/11_Mike_Todd/gls20_video11_multilang_480p.mp4	3	15	21	2	\N
+36	Sadie Robertson Huff	sadie-robertson-huff	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/07_Sadie_Robertson_Huf/video07_eng.m3u8	Sadie Robertson Huff	f	t	thumbnails/2020_Sadie_Robertson_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/07_Sadie_Robertson_Huf/gls20_video07_multilang_480p.mp4	3	19	9	2	thumbnails/sadie_nothing.png
+34	Edgar's Story	edgars-story	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/grander-vision/17_GV_Edgars_Story/video17_eng.m3u8	Edgar's Story	f	t	thumbnails/2020_Edgar_Sandoval_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/grander-vision/17_GV_Edgars_Story/gls20_video17_multilang_480p.mp4	2	10	1	2	thumbnails/vide17_Nothing.png
+35	April Tam Smith	april-tam-smith	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/grander-vision/18_GV_April_Tam_Smith/video18_eng.m3u8	April Tam Smith	f	t	thumbnails/2020_April_Tam_Smith_Thumbnail.jpeg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/grander-vision/18_GV_April_Tam_Smith/gls20_video18_multilang_480p.mp4	2	7	1	2	thumbnails/sadie_nothing_G4xJRgK.png
+33	Katurah York Cooper	katurah-york-cooper	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/grander-vision/16_GV_Katura_York_Cooper/video16_eng.m3u8		f	t	thumbnails/2020_Katurah_York_thumbnail.jpeg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/grander-vision/16_GV_Katura_York_Cooper/gls20_video16_multilang_480p.mp4	2	12	1	2	thumbnails/video16_nothing.png
+32	Six traits leaders typically lack during crisis	six-traits-leaders-typically-lack-during-crisis	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/12_Dr_Tomas_Chamorro_Premuzic/video12_eng.m3u8	Six traits leaders typically lack during crisis	f	t	thumbnails/2020_Thomas_Chamorro_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/12_Dr_Tomas_Chamorro_Premuzic/gls20_video12_multilang_480p.mp4	3	21	2	2	thumbnails/tomas_nothing.png
+31	How to lead through life's reset	how-to-lead-through-lifes-reset	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/09_Paula_Faris/video09_eng.m3u8		f	t	thumbnails/2020_Paula_Faris_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/09_Paula_Faris/gls20_video09_multilang_480p.mp4	3	17	1	2	thumbnails/Paula_Nothing.png
+30	The metrics of migrative leadership	the-metrics-of-migrative-leadership	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/08_TD-Jakes/video08_eng.m3u8	The metrics of migrative leadership	f	t	thumbnails/2020_TD_Jakes_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/08_TD-Jakes/gls20_video08_multilang_480p.mp4	3	20	5	2	thumbnails/Tdjakes_nothing.png
+29	Leadership that meets the moment	leadership-that-meets-the-moment	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/15_Albert_Tate/video15_eng.m3u8		f	t	thumbnails/2020_Albert_Tate_Thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/15_Albert_Tate/gls20_video15_multilang_480p.mp4	3	2	14	2	thumbnails/vid15_Nothing.png
+28	The leadership of a legendary athlete: One on one with Kaká	the-leadership-of-a-legendary-athlete-one-on-one-with-kaka	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/14_Kaka/video14_eng.m3u8		f	t	thumbnails/2020_Kaka_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/14_Kaka/gls20_video14_multilang_480p.mp4	3	11	14	2	thumbnails/vid14_nothing.png
+26	Fearless organizations demand psychological safety	fearless-organizations-demand-psychological-safety	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/10_Amy_Edmonson/video10_eng.m3u8	Fearless organizations demand psychological safety	f	f	thumbnails/2020_Amy_Edmonson_Thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/10_Amy_Edmonson/gls20_video10_multilang_480p.mp4	3	3	\N	2	thumbnails/amy_nothing.png
+24	The science of leadership: Impacting for good	the-science-of-leadership-impacting-for-good	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/06_Vanessa_Van_Edwards/video06_eng.m3u8	The science of leadership: Impacting for good	f	t	thumbnails/2020_Vanessa_Van_Edwards_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/06_Vanessa_Van_Edwards/gls20_video06_multilang_480p_1.mp4	3	22	13	2	thumbnails/Vanessa_nothing.png
+22	How the best leaders build resilience	how-the-best-leaders-build-resilience	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/03_Marcus_Buckingham/video03_eng.m3u8	How the best leaders build resilience	f	t	thumbnails/2020_Marcus_Buckingham_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/03_Marcus_Buckingham/gls20_video03_multilang_480p.mp4	3	14	14	2	thumbnails/vid03_nothing.png
+21	Leading through the dip	leading-through-the-dip	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/01_Craig_Groeschel/video01_eng.m3u8	Leading through the dip	f	t	thumbnails/2020_Craig_Groeschel_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/01_Craig_Groeschel/gls20_video01_multilang_480p.mp4	3	9	2	2	thumbnails/vid01_Nothing.png
+20	The Cure for Corruption	the-cure-for-corruption	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/17_Raja_B_Singh/video16_Raja_B_Singh.m3u8		f	t	thumbnails/2019_Raja_B_Singh_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/17_Raja_B_Singh/gls19_video17_multilang_480p.mp4	3	37	\N	1	thumbnails/pete_English_1.jpg
+37	Safe is Insufficient	safe-is-Insufficient	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/04_Nona_Jones/04_Nona_Jones.m3u8		f	t	thumbnails/2020_Nona_Jones_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/04_Nona_Jones/gls20_video04_multilang_480p.mp4	3	16	6	2	thumbnails/Nona_Nothing_iVWs7rI.png
+27	Most surprising hinderance to innovation	most-surprising-hinderance-to-innovation	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2020/sessions/13_Lysa_TerKeurst/video13_eng.m3u8	Most surprising hinderance to innovation	f	t	thumbnails/2020_Lysa_Terkeurst_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2020/sessions/13_Lysa_TerKeurst/gls20_video13_multilang_480p.mp4	3	13	3	2	thumbnails/vid13_nothing.png
+18	Herding Tigers	herding-tigers	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/12_Todd_Henry/video12_Todd_Henry_eng.m3u8		f	t		https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/12_Todd_Henry/gls19_video12_multilang_480p.mp4	3	38	19	1	thumbnails/todd_English.jpg
+10	Leading Transformational Change	leading-transformational-change	https://s3-vod-test.s3-us-west-2.amazonaws.com/MediaConvert/2019/sessions/06_Danielle_Strickland/video06_Danielle_Strickland_eng.m3u8		f	t	thumbnails/2019_Danielle_Strickland_thumbnail.jpg	https://d23ihokbth7bk5.cloudfront.net/MediaConvert/2019/sessions/06_Danielle_Strickland/gls19_video06_multilang_480p.mp4	3	26	2	1	thumbnails/danielle_nothing.png
 \.
 
 
@@ -9655,6 +9886,22 @@ COPY public.media_manager_year (id, year, slug) FROM stdin;
 
 
 --
+-- Data for Name: product_manager_price; Type: TABLE DATA; Schema: public; Owner: oka
+--
+
+COPY public.product_manager_price (id, active, currency, nickname, recurring_interval, recurring_usage_type, created_at, updated_at, product_id, billing_period, duration, stripe_created, stripe_type, unit_amount, unit_amount_decimal, stripe_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: product_manager_product; Type: TABLE DATA; Schema: public; Owner: oka
+--
+
+COPY public.product_manager_product (id, release_date, region, stripe_id, active, description, name, stripe_created, statement_descriptor, unit_label, stripe_updated, url, created_at, updated_at, collection_id, source) FROM stdin;
+\.
+
+
+--
 -- Data for Name: user_manager_country; Type: TABLE DATA; Schema: public; Owner: oka
 --
 
@@ -9920,6 +10167,13 @@ COPY public.user_manager_profile (id, city, phone_number, work, birthday, create
 4	asdasd	asdasd	asdasd	2021-04-29	2021-04-29		\N	\N	\N	\N	1	4	1
 2	string	string	string	2021-05-03	2021-05-03	pics/a.jpg	string	string	string	string	1	2	1
 5				2021-05-04	2021-05-04		\N	\N	\N	\N	1	5	1
+6				2021-05-28	2021-05-28		\N	\N	\N	\N	1	6	1
+7				2021-05-28	2021-05-28		\N	\N	\N	\N	1	7	1
+8	Tlalpan	567 893 987 23	Unemployed	1992-03-12	2021-06-07	pics/images.jpg	\N	\N	\N	\N	3473	8	142
+9	Madeira City	543 765 987	Student	1987-04-03	2021-06-07	pics/emma.jpg	\N	\N	\N	\N	2231	9	177
+10	Indianapolis	987 765 456	Administrative assistant	1970-10-11	2021-06-07	pics/francis.jpg	\N	\N	\N	\N	1440	10	233
+11	Lancashire	76 654 456 78	Owner	1988-07-07	2021-06-07	pics/kris.jpg	\N	\N	\N	\N	2504	11	232
+12	Aarhus	764 987 87 98	Unemployed	1991-03-12	2021-06-07	pics/jhon.jpg	\N	\N	\N	\N	1531	12	59
 \.
 
 
@@ -14824,7 +15078,7 @@ SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 1, false);
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 80, true);
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 88, true);
 
 
 --
@@ -14838,7 +15092,7 @@ SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 1, false);
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
-SELECT pg_catalog.setval('public.auth_user_id_seq', 5, true);
+SELECT pg_catalog.setval('public.auth_user_id_seq', 12, true);
 
 
 --
@@ -14852,21 +15106,21 @@ SELECT pg_catalog.setval('public.auth_user_user_permissions_id_seq', 1, false);
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
-SELECT pg_catalog.setval('public.django_admin_log_id_seq', 7040, true);
+SELECT pg_catalog.setval('public.django_admin_log_id_seq', 7118, true);
 
 
 --
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 20, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 22, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 42, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 62, true);
 
 
 --
@@ -14961,6 +15215,20 @@ SELECT pg_catalog.setval('public.media_manager_year_id_seq', 2, true);
 
 
 --
+-- Name: product_manager_price_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
+--
+
+SELECT pg_catalog.setval('public.product_manager_price_id_seq', 1, false);
+
+
+--
+-- Name: product_manager_product_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
+--
+
+SELECT pg_catalog.setval('public.product_manager_product_id_seq', 1, false);
+
+
+--
 -- Name: user_manager_country_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
@@ -14971,7 +15239,7 @@ SELECT pg_catalog.setval('public.user_manager_country_id_seq', 250, true);
 -- Name: user_manager_profile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: oka
 --
 
-SELECT pg_catalog.setval('public.user_manager_profile_id_seq', 5, true);
+SELECT pg_catalog.setval('public.user_manager_profile_id_seq', 12, true);
 
 
 --
@@ -15322,6 +15590,22 @@ ALTER TABLE ONLY public.media_manager_year
 
 ALTER TABLE ONLY public.media_manager_year
     ADD CONSTRAINT media_manager_year_year_key UNIQUE (year);
+
+
+--
+-- Name: product_manager_price product_manager_price_pkey; Type: CONSTRAINT; Schema: public; Owner: oka
+--
+
+ALTER TABLE ONLY public.product_manager_price
+    ADD CONSTRAINT product_manager_price_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: product_manager_product product_manager_product_pkey; Type: CONSTRAINT; Schema: public; Owner: oka
+--
+
+ALTER TABLE ONLY public.product_manager_product
+    ADD CONSTRAINT product_manager_product_pkey PRIMARY KEY (id);
 
 
 --
@@ -15751,6 +16035,20 @@ CREATE INDEX media_manager_year_year_4106d194_like ON public.media_manager_year 
 
 
 --
+-- Name: product_manager_price_product_id_c45d0299; Type: INDEX; Schema: public; Owner: oka
+--
+
+CREATE INDEX product_manager_price_product_id_c45d0299 ON public.product_manager_price USING btree (product_id);
+
+
+--
+-- Name: product_manager_product_collection_id_f1c2f87d; Type: INDEX; Schema: public; Owner: oka
+--
+
+CREATE INDEX product_manager_product_collection_id_f1c2f87d ON public.product_manager_product USING btree (collection_id);
+
+
+--
 -- Name: user_manager_country_name_12b40bd0_like; Type: INDEX; Schema: public; Owner: oka
 --
 
@@ -15983,6 +16281,22 @@ ALTER TABLE ONLY public.media_manager_videoforeigndata
 
 ALTER TABLE ONLY public.media_manager_videoforeigndata
     ADD CONSTRAINT media_manager_videof_video_id_f0042e23_fk_media_man FOREIGN KEY (video_id) REFERENCES public.media_manager_video(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: product_manager_price product_manager_pric_product_id_c45d0299_fk_product_m; Type: FK CONSTRAINT; Schema: public; Owner: oka
+--
+
+ALTER TABLE ONLY public.product_manager_price
+    ADD CONSTRAINT product_manager_pric_product_id_c45d0299_fk_product_m FOREIGN KEY (product_id) REFERENCES public.product_manager_product(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: product_manager_product product_manager_prod_collection_id_f1c2f87d_fk_media_man; Type: FK CONSTRAINT; Schema: public; Owner: oka
+--
+
+ALTER TABLE ONLY public.product_manager_product
+    ADD CONSTRAINT product_manager_prod_collection_id_f1c2f87d_fk_media_man FOREIGN KEY (collection_id) REFERENCES public.media_manager_collection(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
